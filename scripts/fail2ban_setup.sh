@@ -56,7 +56,7 @@ while true; do
             fi
 
             # Comenta todas as linhas da seção [sshd] no arquivo jail.local
-            sudo sed -i '/\[sshd\]/,/\[/s/^\([^#]\)/#\1/' /etc/fail2ban/jail.local
+            sed -i '/\[sshd\]/,/\[/s/^\([^#]\)/#\1/' /etc/fail2ban/jail.local
             echo "Todas as linhas da seção [sshd] foram comentadas."
             
             # Adiciona a configuração para Proxmox e SSH
