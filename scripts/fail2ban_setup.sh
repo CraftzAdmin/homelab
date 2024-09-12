@@ -135,7 +135,8 @@ EOL
                 echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
             else
                 echo "As seções [proxmox] e [sshd] já estão configuradas corretamente. Nenhuma ação necessária."
-                exit 0
+                read -p "Pressione Enter para voltar ao menu principal..."
+                continue
             fi
 
             # Cria o filtro para o Proxmox
