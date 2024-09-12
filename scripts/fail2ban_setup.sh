@@ -16,37 +16,48 @@ function header_info {
 ██║     ██╔══██╗██╔══██║██╔══╝     ██║    ███╔╝  
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
-           Script Instalação Fail2Ban
+          
+        Script Instalação Fail2Ban
+         Por Daniel Brunod
+         
 EOF
 }
 header_info
-echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
-echo "Escolha uma opção:"
-echo "1. Instalar Fail2Ban"
-echo "2. Configurar Fail2Ban para Proxmox e SSH"
-echo "3. Reiniciar Fail2Ban"
-echo "4. Desbloquear IP"
-echo "5. Sair"
-read -p "Opção: " option
 
-case $option in
-  1)
-    echo "Atualizando pacotes e instalando Fail2Ban..."
-    apt update
-    apt install -y fail2ban
-    echo "Fail2Ban instalado com sucesso."
-    ;;
-    
-  2)
-    echo "Configurando Fail2Ban para Proxmox e SSH..."
+function show_menu {
+    echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
+    echo "Escolha uma opção:"
+    echo "1. Instalar Fail2Ban"
+    echo "2. Configurar Fail2Ban para Proxmox e SSH"
+    echo "3. Reiniciar Fail2Ban"
+    echo "4. Desbloquear IP"
+    echo "5. Sair"
+}
 
-    # Cria o arquivo jail.local se não existir e copia jail.conf como base
-    if [ ! -f /etc/fail2ban/jail.local ]; then
-      cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-    fi
-    
-    # Adiciona a configuração para Proxmox e SSH
-    cat <<EOL >> /etc/fail2ban/jail.local
+
+while true; do
+    header_info
+    show_menu
+    read -p "Opção: " option
+
+    case $option in
+        1)
+            echo "Atualizando pacotes e instalando Fail2Ban..."
+            apt update
+            apt install -y fail2ban
+            echo "Fail2Ban instalado com sucesso."
+            ;;
+        
+        2)
+            echo "Configurando Fail2Ban para Proxmox e SSH..."
+
+            # Cria o arquivo jail.local se não existir e copia jail.conf como base
+            if [ ! -f /etc/fail2ban/jail.local ]; then
+              cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+            fi
+            
+            # Adiciona a configuração para Proxmox e SSH
+            cat <<EOL >> /etc/fail2ban/jail.local
 
 [proxmox]
 enabled = true
@@ -63,37 +74,41 @@ logpath = %(sshd_log)s
 backend = systemd
 EOL
 
-    echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
+            echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
 
-    # Cria o filtro para o Proxmox
-    cat <<EOL > /etc/fail2ban/filter.d/proxmox.conf
+            # Cria o filtro para o Proxmox
+            cat <<EOL > /etc/fail2ban/filter.d/proxmox.conf
 [Definition]
 failregex = pvedaemon\[.*authentication failure; rhost=<HOST> user=.* msg=.*
 ignoreregex =
 journalmatch = _SYSTEMD_UNIT=pvedaemon.service
 EOL
 
-    echo "Filtro para Proxmox criado."
-    ;;
-    
-  3)
-    echo "Reiniciando Fail2Ban para aplicar as configurações..."
-    systemctl restart fail2ban
-    echo "Fail2Ban reiniciado."
-    ;;
-    
-  4)
-    read -p "Digite o IP a ser desbloqueado: " ip
-    fail2ban-client unban $ip
-    echo "IP $ip desbloqueado."
-    ;;
-    
-  5)
-    echo "Saindo..."
-    exit 0
-    ;;
-    
-  *)
-    echo "Opção inválida. Tente novamente."
-    ;;
-esac
+            echo "Filtro para Proxmox criado."
+            ;;
+        
+        3)
+            echo "Reiniciando Fail2Ban para aplicar as configurações..."
+            systemctl restart fail2ban
+            echo "Fail2Ban reiniciado."
+            ;;
+        
+        4)
+            read -p "Digite o IP a ser desbloqueado: " ip
+            fail2ban-client unban $ip
+            echo "IP $ip desbloqueado."
+            ;;
+        
+        5)
+            echo "Saindo..."
+            exit 0
+            ;;
+        
+        *)
+            echo "Opção inválida. Tente novamente."
+            ;;
+    esac
+
+    # Pausa antes de voltar ao menu
+    read -p "Pressione Enter para voltar ao menu principal..."
+done
