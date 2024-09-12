@@ -19,7 +19,7 @@ function header_info {
            Script Instalação Fail2Ban
 EOF
 }
-
+header_info
 echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
 echo "Escolha uma opção:"
 echo "1. Instalar Fail2Ban"
