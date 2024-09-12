@@ -6,6 +6,8 @@ O **Proxmox Virtual Environment (VE)** é uma plataforma de virtualização open
 
 Lançada em versões atualizadas regularmente, a versão **Proxmox VE 8.2.4** traz melhorias de desempenho, segurança e novas funcionalidades, tornando-o ainda mais robusto para diferentes cenários de uso.
 
+---
+
 ### **Vantagens do Proxmox VE 8.2.4**
 
 1. **Open-Source e Gratuito**: O Proxmox é open-source, o que significa que você pode usá-lo sem custos de licenciamento. Ele oferece uma interface gráfica intuitiva e bem estruturada, facilitando a configuração e gerenciamento, especialmente para iniciantes.
@@ -22,6 +24,8 @@ Lançada em versões atualizadas regularmente, a versão **Proxmox VE 8.2.4** tr
 2. **Hardware Compatível**: O Proxmox é baseado em Linux, o que significa que pode haver incompatibilidades de hardware em equipamentos muito antigos ou incomuns. É importante verificar a compatibilidade antes de instalar.
 3. **Requer Conhecimento Básico de Redes**: Configurações avançadas, como **firewall**, redes **VLAN** ou configuração de armazenamento compartilhado, podem ser complicadas para quem não tem familiaridade com redes.
 4. **Suporte Oficial Pago**: Embora o Proxmox seja gratuito, o suporte oficial é pago. Isso significa que, se você precisar de suporte direto da equipe Proxmox para resolver problemas críticos, precisará adquirir um plano.
+
+---
 
 ### Entendendo os conceitos de KVM e LXC
 
@@ -57,6 +61,8 @@ A escolha entre **KVM** e **LXC** depende do tipo de aplicação que você desej
 4. **Sistemas Pesados e Complexos**: Se você estiver rodando uma aplicação robusta que exige uma virtualização completa, como um ambiente de produção de larga escala, servidores de aplicações corporativas, ou máquinas que devem ser isoladas completamente do servidor host, KVM é a melhor opção.
 
 **Mas não se preocupe em entender tudo agora. Quando passarmos as etapas de configuração e instalação, vamos voltar a estes conceitos.** 
+
+---
 
 ## Hardware do Homelab: Configuração e Descrição
 
@@ -100,6 +106,8 @@ A **fonte de 550W real** é suficiente para alimentar todos os componentes, ofer
 
 Embora este setup seja considerado **barato** em comparação com servidores tradicionais, ele oferece uma **excelente performance** para pequenos ambientes de desenvolvimento, experimentação e até produção em escalas menores. A flexibilidade de utilizar componentes de segunda mão ou recuperados, como o processador Xeon e a placa Machinist, reduz significativamente os custos, sem sacrificar a potência necessária para virtualização e armazenamento de dados. Este tipo de configuração é ideal para quem quer explorar o mundo da virtualização, montar um **homelab** ou até mesmo gerenciar pequenos serviços de produção com eficiência.
 
+---
+
 ### Processador Xeon E5-2680V4: Equilíbrio entre Jogos e Produtividade
 
 O **Intel Xeon E5-2680V4** é um processador projetado originalmente para servidores e estações de trabalho. Ele oferece **14 núcleos e 28 threads**, funcionando a uma frequência base de **2,4 GHz**, com **TDP** de **120W**. Esse processador é excelente para cenários de produtividade e multitarefas, como ambientes de virtualização, edição de vídeo, renderização 3D, e outras tarefas que demandam alto uso de múltiplos núcleos.
@@ -114,6 +122,8 @@ Ao considerar um processador **Xeon** para **jogos** ou **produtividade**, é im
 2. **Xeon para Produtividade**:
     - Para tarefas de produtividade, como virtualização e renderização, o número de **núcleos** e **threads** é crucial. Processadores como o **Xeon E5-2680V4**, com seus 14 núcleos, conseguem distribuir melhor a carga de trabalho em várias tarefas simultâneas.
     - Aqui, o **TDP** (Thermal Design Power) é uma métrica importante. Ele indica a quantidade máxima de calor que o cooler precisa dissipar, diretamente relacionada ao consumo de energia do processador. O **TDP de 120W** do E5-2680V4 mostra que ele consome mais energia que CPUs domésticas, mas esse valor é justificado pela quantidade de núcleos e desempenho em tarefas multithread.
+
+---
 
 ### O que é TDP?
 
@@ -169,6 +179,8 @@ Em termos de **desempenho**, o **Xeon E5-2680V4** tem uma clara vantagem no núm
 - **Se você precisa de múltiplos núcleos, mas quer reduzir o consumo de energia**, o **Xeon E5-2650 V4** ou o **E5-2670 V4** seriam opções sólidas. Ambos oferecem núcleos suficientes para lidar com virtualização e multitarefas, com TDPs mais baixos.
 - **Se o foco for uma redução significativa de TDP**, mas com uma ligeira perda no número de núcleos, o **Xeon E5-2630 V4** ou **E5-2620 V4** podem ser escolhas adequadas. Eles mantêm um bom desempenho, especialmente em ambientes de desenvolvimento e testes, mas com menor demanda de energia.
 
+---
+
 ### Processadores Xeon Reaproveitados: Vantagens e Desvantagens
 
 Os processadores **Xeon**, especialmente os modelos mais antigos como o **E5-2680V4**, são amplamente reaproveitados e vendidos a preços acessíveis, principalmente no mercado chinês. Isso acontece porque muitas empresas de grande porte renovam seus servidores, substituindo CPUs perfeitamente funcionais por modelos mais novos. Esses **chips Xeon reaproveitados** são testados, recondicionados e revendidos, tornando-se uma opção atraente para quem deseja montar homelabs ou servidores de baixo custo.
@@ -193,6 +205,8 @@ Os processadores **Xeon**, especialmente os modelos mais antigos como o **E5-268
 **Lembre-se que se a oferta é demais, o santo desconfia!**
 
 </aside>
+
+---
 
 ### Escolhendo a Memória para o Homelab: Desktop vs. ECC
 
@@ -231,6 +245,8 @@ A escolha entre **ECC** e **memória de desktop comum** depende da **finalidade 
 💡**Mas não se esqueça:** Para garantir a compatibilidade e melhor performance, é **recomendado** que você utilize **o mesmo tipo de memória em todo o setup**, seja **ECC** ou não ECC.
 
 </aside>
+
+---
 
 ### Memórias 2666MHz vs. 3200MHz: Qual Escolher?
 
