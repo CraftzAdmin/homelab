@@ -107,7 +107,7 @@ while true; do
             # Verifica se a seção [sshd] já foi comentada
             if ! check_sshd_commented; then
                 # Comenta as linhas específicas da seção [sshd]
-                sudo sed -i '/\[sshd\]/,/backend = %(sshd_backend)s/ s/^\([^#].*\)/#\1/' /etc/fail2ban/jail.local
+                sed -i '/\[sshd\]/,/backend = %(sshd_backend)s/ s/^\([^#].*\)/#\1/' /etc/fail2ban/jail.local
                 echo "As linhas específicas da seção [sshd] foram comentadas."
             fi
 
