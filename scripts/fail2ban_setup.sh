@@ -1,6 +1,24 @@
 #!/bin/bash
 
 # Script para instalar e configurar Fail2Ban no Proxmox VE
+# Desenvolvido por Daniel Brunod - Uso sem restrições desde que informadas as fontes.
+# Copyright (c) 2024- Craftz
+# Author: Daniel Brunod
+# License: MIT
+
+function header_info {
+    clear
+    cat <<"EOF"
+
+ ██████╗██████╗  █████╗ ███████╗████████╗███████╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝╚══███╔╝
+██║     ██████╔╝███████║█████╗     ██║     ███╔╝ 
+██║     ██╔══██╗██╔══██║██╔══╝     ██║    ███╔╝  
+╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
+           Script Instalação Fail2Ban
+EOF
+}
 
 echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
 echo "Escolha uma opção:"
