@@ -22,7 +22,6 @@ function header_info {
          
 EOF
 }
-header_info
 
 function show_menu {
     echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
