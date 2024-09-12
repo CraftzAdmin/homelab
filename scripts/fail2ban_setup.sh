@@ -23,6 +23,52 @@ function header_info {
 EOF
 }
 
+# Função para verificar se a função [sshd] já foi comentada
+function check_sshd_commented {
+    if grep -q "#port    = ssh" /etc/fail2ban/jail.local; then
+        echo "A seção [sshd] já foi comentada."
+        return 0
+    else
+        echo "A seção [sshd] não foi comentada ainda."
+        return 1
+    fi
+}
+
+# Função para verificar se o conteúdo de [proxmox] e [sshd] já existe e está correto
+function check_proxmox_ssh_sections {
+    local PROXMOX_SECTION="[proxmox]
+enabled = true
+port = https,http,8006
+filter = proxmox
+backend = systemd
+maxretry = 3
+findtime = 2d
+bantime = 1h"
+
+    local SSHD_SECTION="[sshd]
+port    = ssh
+logpath = %(sshd_log)s
+backend = systemd"
+
+    if grep -q "\[proxmox\]" /etc/fail2ban/jail.local && grep -q "$PROXMOX_SECTION" /etc/fail2ban/jail.local; then
+        echo "A seção [proxmox] já existe e está configurada corretamente."
+    else
+        echo "A seção [proxmox] precisa ser configurada."
+        return 1
+    fi
+
+    if grep -q "\[sshd\]" /etc/fail2ban/jail.local && grep -q "$SSHD_SECTION" /etc/fail2ban/jail.local; then
+        echo "A seção [sshd] já existe e está configurada corretamente."
+    else
+        echo "A seção [sshd] precisa ser configurada."
+        return 1
+    fi
+
+    return 0
+}
+
+
+
 function show_menu {
     echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
     echo "Escolha uma opção:"
@@ -47,20 +93,30 @@ while true; do
             echo "Fail2Ban instalado com sucesso."
             ;;
         
-        2)
+       2)
             echo "Configurando Fail2Ban para Proxmox e SSH..."
 
             # Cria o arquivo jail.local se não existir e copia jail.conf como base
             if [ ! -f /etc/fail2ban/jail.local ]; then
-              cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+                cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+                echo "Arquivo jail.local criado a partir de jail.conf."
+            else
+                echo "Arquivo jail.local já existe."
             fi
 
-             # Comenta as linhas específicas da seção [sshd]
-            sed -i '/\[sshd\]/,/backend = %(sshd_backend)s/ s/^\([^#].*\)/#\1/' /etc/fail2ban/jail.local
-            echo "As linhas específicas da seção [sshd] foram comentadas."
-            
-            # Adiciona a configuração para Proxmox e SSH
-            cat <<EOL >> /etc/fail2ban/jail.local
+            # Verifica se a seção [sshd] já foi comentada
+            if ! check_sshd_commented; then
+                # Comenta as linhas específicas da seção [sshd]
+                sudo sed -i '/\[sshd\]/,/backend = %(sshd_backend)s/ s/^\([^#].*\)/#\1/' /etc/fail2ban/jail.local
+                echo "As linhas específicas da seção [sshd] foram comentadas."
+            fi
+
+            # Verifica se as seções [proxmox] e [sshd] já existem e estão corretas
+            if ! check_proxmox_ssh_sections; then
+                echo "Adicionando as seções [proxmox] e [sshd]..."
+
+                # Adiciona a configuração para Proxmox e SSH
+                cat <<EOL >> /etc/fail2ban/jail.local
 
 [proxmox]
 enabled = true
@@ -76,8 +132,11 @@ port    = ssh
 logpath = %(sshd_log)s
 backend = systemd
 EOL
-
-            echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
+                echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
+            else
+                echo "As seções [proxmox] e [sshd] já estão configuradas corretamente. Nenhuma ação necessária."
+                exit 0
+            fi
 
             # Cria o filtro para o Proxmox
             cat <<EOL > /etc/fail2ban/filter.d/proxmox.conf
