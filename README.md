@@ -186,9 +186,9 @@ Os processadores **Xeon**, especialmente os modelos mais antigos como o **E5-268
 3. **Compatibilidade**: Algumas vezes, pode haver desafios na compatibilidade com placas-mãe mais modernas ou com outros componentes, exigindo ajustes técnicos adicionais.
 
 <aside>
-💡
 
-**Por isso é importante ter uma fonte confiável** para adquirir seu processador, pois os fornecedores chineses tem diferentes “graus” de qualidade dos chips utilizados. Mas é difícil identificar isso nos **markeplaces** online, então busque por vendedores de boa qualificação. 
+
+ 💡**Por isso é importante ter uma fonte confiável** para adquirir seu processador, pois os fornecedores chineses tem diferentes “graus” de qualidade dos chips utilizados. Mas é difícil identificar isso nos **markeplaces** online, então busque por vendedores de boa qualificação. 
 
 **Lembre-se que se a oferta é demais, o santo desconfia!**
 
@@ -226,9 +226,9 @@ Aqui está uma tabela resumindo as principais diferenças entre **memórias ECC*
 A escolha entre **ECC** e **memória de desktop comum** depende da **finalidade do homelab**. Se o seu foco é em **produtividade, virtualização, ou cargas de trabalho críticas**, a **memória ECC** oferece maior confiabilidade e estabilidade. Por outro lado, se você está montando um homelab mais simples ou com foco em desenvolvimento, as **memórias de desktop comuns** podem ser suficientes, especialmente se o custo for uma consideração importante.
 
 <aside>
-💡
 
-**Mas não se esqueça:** Para garantir a compatibilidade e melhor performance, é **recomendado** que você utilize **o mesmo tipo de memória em todo o setup**, seja **ECC** ou não ECC.
+
+💡**Mas não se esqueça:** Para garantir a compatibilidade e melhor performance, é **recomendado** que você utilize **o mesmo tipo de memória em todo o setup**, seja **ECC** ou não ECC.
 
 </aside>
 
