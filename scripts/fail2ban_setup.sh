@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Script para instalar e configurar Fail2Ban no Proxmox VE
+
+echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
+echo "Escolha uma opção:"
+echo "1. Instalar Fail2Ban"
+echo "2. Configurar Fail2Ban para Proxmox e SSH"
+echo "3. Reiniciar Fail2Ban"
+echo "4. Desbloquear IP"
+echo "5. Sair"
+read -p "Opção: " option
+
+case $option in
+  1)
+    echo "Atualizando pacotes e instalando Fail2Ban..."
+    apt update
+    apt install -y fail2ban
+    echo "Fail2Ban instalado com sucesso."
+    ;;
+    
+  2)
+    echo "Configurando Fail2Ban para Proxmox e SSH..."
+
+    # Cria o arquivo jail.local se não existir e copia jail.conf como base
+    if [ ! -f /etc/fail2ban/jail.local ]; then
+      cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+    fi
+    
+    # Adiciona a configuração para Proxmox e SSH
+    cat <<EOL >> /etc/fail2ban/jail.local
+
+[proxmox]
+enabled = true
+port = https,http,8006
+filter = proxmox
+backend = systemd
+maxretry = 3
+findtime = 2d
+bantime = 1h
+
+[sshd]
+port    = ssh
+logpath = %(sshd_log)s
+backend = systemd
+EOL
+
+    echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
+
+    # Cria o filtro para o Proxmox
+    cat <<EOL > /etc/fail2ban/filter.d/proxmox.conf
+[Definition]
+failregex = pvedaemon\[.*authentication failure; rhost=<HOST> user=.* msg=.*
+ignoreregex =
+journalmatch = _SYSTEMD_UNIT=pvedaemon.service
+EOL
+
+    echo "Filtro para Proxmox criado."
+    ;;
+    
+  3)
+    echo "Reiniciando Fail2Ban para aplicar as configurações..."
+    systemctl restart fail2ban
+    echo "Fail2Ban reiniciado."
+    ;;
+    
+  4)
+    read -p "Digite o IP a ser desbloqueado: " ip
+    fail2ban-client unban $ip
+    echo "IP $ip desbloqueado."
+    ;;
+    
+  5)
+    echo "Saindo..."
+    exit 0
+    ;;
+    
+  *)
+    echo "Opção inválida. Tente novamente."
+    ;;
+esac
