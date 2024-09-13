@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V12
+    After Install Script for Proxmox -V13
             by Daniel Brunod
          
 
@@ -436,16 +436,32 @@ revert_pci_passthrough() {
   read -p "Press Enter to continue..."
 }
 
+remove_proxmox_popup() {
+  msg_info "Removing Proxmox subscription pop-up (if present)"
+  
+  # Execute the sed command to remove the subscription pop-up
+  sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+  
+  # Restart pveproxy service to apply changes
+  systemctl restart pveproxy.service
+
+  msg_ok "Subscription pop-up removal command executed, and pveproxy service restarted."
+
+  echo ""
+  read -p "Press Enter to continue..."
+}
+
 
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 6 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 7 \
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
     "4" "Modify Repositories" \
     "5" "Enable PCI Passthrough" \
-    "6" "Exit" 3>&2 2>&1 1>&3)
+    "6" "Remove Proxmox Subscription Pop-up" \
+    "7" "Exit" 3>&2 2>&1 1>&3)
 
     case $CHOICE in
       1)
@@ -461,9 +477,12 @@ main_menu() {
         modify_repos
         ;;
       5)
-        enable_pci_passthrough 
+        enable_pci_passthrough  
         ;;
       6)
+        remove_proxmox_popup 
+        ;;
+      7)
         clear
         exit 0
         ;;
@@ -473,6 +492,7 @@ main_menu() {
     esac
   done
 }
+
 
 
 # Start the script
