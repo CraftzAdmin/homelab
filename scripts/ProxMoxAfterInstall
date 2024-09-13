@@ -345,6 +345,9 @@ main_menu() {
         modify_repos
         ;;
       4)
+        modify_dns
+        ;;
+      5)
         clear
         exit 0
         ;;
