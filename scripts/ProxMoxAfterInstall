@@ -238,7 +238,6 @@ display_active_repos() {
 }
 
 
-
 # Function to modify repositories (non-production and enterprise)
 modify_repos() {
   local pve_repo_file="/etc/apt/sources.list"
@@ -328,7 +327,7 @@ modify_repos() {
 # Main menu loop
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 4 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 10 \
     "1" "Update and Upgrade Proxmox" \
     "2"  "Modify DNS"\
     "3" "Display Active Repositories" \
