@@ -62,93 +62,7 @@ update_proxmox() {
   read -p "Press Enter to continue..."
 }
 
-# Function to modify DNS configuration
-modify_dns() {
-  local resolv_file="/etc/resolv.conf"
-  local bak_file="${resolv_file}.bak"
-
-  msg_info "Checking current DNS configuration"
-  
-  # Display current nameservers
-  echo "Current DNS nameservers:"
-  grep -E '^nameserver' $resolv_file || echo "No nameservers found."
-
-  echo ""
-  read -p "Press Enter to continue..."
-
-  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "DNS Configuration" --menu "Choose what to do with the current DNS configuration:" 15 60 3 \
-  "1" "Keep current DNS configuration" \
-  "2" "Set new DNS servers" \
-  "3" "Exit to menu" 3>&2 2>&1 1>&3)
-
-  case $CHOICE in
-    1)
-      msg_ok "Keeping current DNS configuration"
-      echo ""
-      read -p "Press Enter to continue..."
-      ;;
-    2)
-      msg_info "Setting new DNS servers"
-      # Present DNS options to the user
-      NEW_DNS=$(whiptail --backtitle "Proxmox Server Setup" --title "Choose DNS Servers" --menu "Select a DNS option:" 15 60 4 \
-      "1" "Cloudflare (1.1.1.1, 1.0.0.1)" \
-      "2" "Cloudflare Malware Protection (1.1.1.2, 1.0.0.2)" \
-      "3" "Cloudflare Malware & Adult Content Filter (1.1.1.3, 1.0.0.3)" \
-      "4" "Google DNS (8.8.8.8, 8.8.4.4)" 3>&2 2>&1 1>&3)
-
-      # Create a backup of the current resolv.conf
-      if [[ -f $bak_file ]]; then
-        msg_info "Backup file $bak_file already exists, it will be overwritten"
-      else
-        msg_info "Creating backup of current DNS configuration at $bak_file"
-      fi
-      cp $resolv_file $bak_file
-      msg_ok "Backup created at $bak_file"
-
-      # Comment out all existing nameserver entries
-      sed -i 's/^nameserver/#&/' $resolv_file
-
-      # Set new nameservers based on user choice, descomentando se existirem ou adicionando se não
-      case $NEW_DNS in
-        1)
-          grep -q '^nameserver 1.1.1.1' $resolv_file || echo "nameserver 1.1.1.1" >> $resolv_file
-          grep -q '^nameserver 1.0.0.1' $resolv_file || echo "nameserver 1.0.0.1" >> $resolv_file
-          msg_ok "Cloudflare DNS configured"
-          ;;
-        2)
-          grep -q '^nameserver 1.1.1.2' $resolv_file || echo "nameserver 1.1.1.2" >> $resolv_file
-          grep -q '^nameserver 1.0.0.2' $resolv_file || echo "nameserver 1.0.0.2" >> $resolv_file
-          msg_ok "Cloudflare DNS with Malware Protection configured"
-          ;;
-        3)
-          grep -q '^nameserver 1.1.1.3' $resolv_file || echo "nameserver 1.1.1.3" >> $resolv_file
-          grep -q '^nameserver 1.0.0.3' $resolv_file || echo "nameserver 1.0.0.3" >> $resolv_file
-          msg_ok "Cloudflare DNS with Malware & Adult Content Protection configured"
-          ;;
-        4)
-          grep -q '^nameserver 8.8.8.8' $resolv_file || echo "nameserver 8.8.8.8" >> $resolv_file
-          grep -q '^nameserver 8.8.4.4' $resolv_file || echo "nameserver 8.8.4.4" >> $resolv_file
-          msg_ok "Google DNS configured"
-          ;;
-      esac
-
-      # Test the DNS with a ping to GitHub
-      if ping -c 1 github.com &>/dev/null; then
-        msg_ok "DNS configuration is working correctly"
-      else
-        msg_error "DNS configuration failed, please check your settings"
-      fi
-
-      echo ""
-      read -p "Press Enter to continue..."
-      ;;
-    3)
-      msg_info "Returning to the main menu"
-      ;;
-  esac
-}
-
-# Function to modify repositories
+# Function to modify repositories (non-production and enterprise)
 modify_repos() {
   local pve_repo_file="/etc/apt/sources.list"
   local enterprise_repo_file="/etc/apt/sources.list.d/pve-enterprise.list"
@@ -175,7 +89,7 @@ modify_repos() {
   "3" "Exit to menu" 3>&2 2>&1 1>&3)
 
   case $CHOICE in
-    1)
+    1)  # Switch to Non-Production Repositories
       msg_info "Switching to Non-Production Repositories"
 
       # Backup current repository files
@@ -184,20 +98,30 @@ modify_repos() {
       cp $ceph_repo_file ${ceph_repo_file}.bak
       msg_ok "Backup created for repository files"
 
-      # Add non-production repositories if not already present
-      if ! grep -q '^deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' $pve_repo_file; then
+      # Check and descomentar ou incluir os repositórios não-produção
+      if grep -q '^#deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        # Descomentar se estiver comentado
+        sed -i 's|^#deb http://download.proxmox.com/debian/pve|deb http://download.proxmox.com/debian/pve|' $pve_repo_file
+        msg_ok "Descomentado Proxmox non-production repository"
+      elif ! grep -q '^deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        # Adicionar se não existir
         echo -e "\n# NOT recommended for production use" >> $pve_repo_file
         echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" >> $pve_repo_file
-        msg_ok "Added Proxmox non-production repository"
+        msg_ok "Adicionado Proxmox non-production repository"
       fi
 
-      if ! grep -q '^deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription' $pve_repo_file; then
+      if grep -q '^#deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
+        # Descomentar se estiver comentado
+        sed -i 's|^#deb http://download.proxmox.com/debian/ceph-quincy|deb http://download.proxmox.com/debian/ceph-quincy|' $pve_repo_file
+        msg_ok "Descomentado Ceph non-production repository"
+      elif ! grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
+        # Adicionar se não existir
         echo -e "\n# Not for production ceph" >> $pve_repo_file
         echo "deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription" >> $pve_repo_file
-        msg_ok "Added Ceph non-production repository"
+        msg_ok "Adicionado Ceph non-production repository"
       fi
 
-      # Disable enterprise repositories by commenting out specific lines
+      # Comentar os repositórios enterprise
       sed -i 's|^deb https://enterprise.proxmox.com/debian/pve|#deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
       sed -i 's|^deb https://enterprise.proxmox.com/debian/ceph|#deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
 
@@ -205,22 +129,31 @@ modify_repos() {
       echo ""
       read -p "Press Enter to continue..."
       ;;
-    2)
+      
+    2)  # Switch to Enterprise Repositories
       msg_info "Switching to Enterprise Repositories"
 
-      # Disable non-production repositories
+      # Comentar os repositórios não-produção
       sed -i 's|^deb http://download.proxmox.com/debian/pve|#deb http://download.proxmox.com/debian/pve|' $pve_repo_file
       sed -i 's|^deb http://download.proxmox.com/debian/ceph-quincy|#deb http://download.proxmox.com/debian/ceph-quincy|' $pve_repo_file
 
-      # Enable enterprise repositories
-      sed -i 's|^#deb https://enterprise.proxmox.com/debian/pve|deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
-      sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph|deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
+      # Descomentar os repositórios enterprise se estiverem comentados
+      if grep -q '^#deb https://enterprise.proxmox.com/debian/pve' $enterprise_repo_file; then
+        sed -i 's|^#deb https://enterprise.proxmox.com/debian/pve|deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
+        msg_ok "Descomentado Proxmox enterprise repository"
+      fi
+
+      if grep -q '^#deb https://enterprise.proxmox.com/debian/ceph' $ceph_repo_file; then
+        sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph|deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
+        msg_ok "Descomentado Ceph enterprise repository"
+      fi
 
       msg_ok "Switched to Enterprise Repositories"
       echo ""
       read -p "Press Enter to continue..."
       ;;
-    3)
+      
+    3)  # Return to menu
       msg_info "Returning to the main menu"
       ;;
   esac
@@ -258,5 +191,4 @@ main_menu() {
 
 # Start the script
 header_info
-read -p "Press Enter to continue..."
 main_menu
