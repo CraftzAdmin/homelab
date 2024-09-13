@@ -189,6 +189,7 @@ modify_dns() {
 
 
 # Function to modify repositories (non-production and enterprise)
+# Function to modify repositories (non-production and enterprise)
 modify_repos() {
   local pve_repo_file="/etc/apt/sources.list"
   local enterprise_repo_file="/etc/apt/sources.list.d/pve-enterprise.list"
@@ -226,25 +227,17 @@ modify_repos() {
 
       # Check and descomentar ou incluir os repositórios não-produção
       if grep -q '^#deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
-        # Descomentar se estiver comentado
         sed -i 's|^#deb http://download.proxmox.com/debian/pve|deb http://download.proxmox.com/debian/pve|' $pve_repo_file
-        msg_ok "Descomentado Proxmox non-production repository"
       elif ! grep -q '^deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
-        # Adicionar se não existir
         echo -e "\n# NOT recommended for production use" >> $pve_repo_file
         echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" >> $pve_repo_file
-        msg_ok "Adicionado Proxmox non-production repository"
       fi
 
       if grep -q '^#deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
-        # Descomentar se estiver comentado
         sed -i 's|^#deb http://download.proxmox.com/debian/ceph-quincy|deb http://download.proxmox.com/debian/ceph-quincy|' $pve_repo_file
-        msg_ok "Descomentado Ceph non-production repository"
       elif ! grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
-        # Adicionar se não existir
         echo -e "\n# Not for production ceph" >> $pve_repo_file
         echo "deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription" >> $pve_repo_file
-        msg_ok "Adicionado Ceph non-production repository"
       fi
 
       # Comentar os repositórios enterprise
@@ -266,12 +259,10 @@ modify_repos() {
       # Descomentar os repositórios enterprise se estiverem comentados
       if grep -q '^#deb https://enterprise.proxmox.com/debian/pve' $enterprise_repo_file; then
         sed -i 's|^#deb https://enterprise.proxmox.com/debian/pve|deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
-        msg_ok "Descomentado Proxmox enterprise repository"
       fi
 
       if grep -q '^#deb https://enterprise.proxmox.com/debian/ceph' $ceph_repo_file; then
         sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph|deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
-        msg_ok "Descomentado Ceph enterprise repository"
       fi
 
       msg_ok "Switched to Enterprise Repositories"
@@ -284,6 +275,7 @@ modify_repos() {
       ;;
   esac
 }
+
 
 # Main menu loop
 main_menu() {
