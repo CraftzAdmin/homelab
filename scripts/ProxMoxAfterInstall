@@ -190,104 +190,127 @@ modify_dns() {
 
 # Function to modify repositories (non-production and enterprise)
 modify_repos() {
+  local pve_repo_file="/etc/apt/sources.list"
   local enterprise_repo_file="/etc/apt/sources.list.d/pve-enterprise.list"
   local ceph_repo_file="/etc/apt/sources.list.d/ceph.list"
 
-  msg_info "Checking existing repository configuration"
+  # Verificar se os repositórios padrões estão ativos
+  msg_info "Checking existing repository configuration in $pve_repo_file"
 
-  # Display current repository configuration
-  echo "Enterprise Repositories:"
-  grep -E '^deb' $enterprise_repo_file || echo "No repositories found in $enterprise_repo_file"
-  echo "Ceph Repositories:"
-  grep -E '^deb' $ceph_repo_file || echo "No repositories found in $ceph_repo_file"
+  # Verificar repositórios padrão
+  if grep -q '^deb http://deb.debian.org/debian bookworm main contrib' $pve_repo_file && \
+     grep -q '^deb http://deb.debian.org/debian bookworm-updates main contrib' $pve_repo_file && \
+     grep -q '^deb http://security.debian.org/debian-security bookworm-security main contrib' $pve_repo_file; then
+    msg_ok "Default Debian repositories are active"
+  else
+    msg_error "Default Debian repositories are missing or commented"
+  fi
 
-  echo ""
-  read -p "Press Enter to continue..."
+  # Verificar se o repositório non-subscription está ativo, comentado ou ausente
+  if grep -q '^deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' $pve_repo_file; then
+    msg_ok "Non-subscription repository is active"
+  elif grep -q '^#deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' $pve_repo_file; then
+    msg_info "Non-subscription repository is commented"
+  else
+    msg_error "Non-subscription repository is missing"
+  fi
 
-  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Repository Configuration" --menu "Choose an action:" 15 60 4 \
-  "1" "Switch to Non-Production Repositories" \
-  "2" "Switch to Enterprise Repositories" \
-  "3" "Exit to menu" 3>&2 2>&1 1>&3)
+  # Verificar repositório enterprise no pve-enterprise.list
+  msg_info "Checking Proxmox enterprise repository in $enterprise_repo_file"
+  if grep -q '^deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise' $enterprise_repo_file; then
+    msg_ok "Enterprise repository is active"
+  elif grep -q '^#deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise' $enterprise_repo_file; then
+    msg_info "Enterprise repository is commented"
+  else
+    msg_error "Enterprise repository is missing"
+  fi
+
+  # Verificar repositório enterprise no ceph.list
+  msg_info "Checking Ceph enterprise repository in $ceph_repo_file"
+  if grep -q '^deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise' $ceph_repo_file; then
+    msg_ok "Enterprise Ceph repository is active"
+  elif grep -q '^#deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise' $ceph_repo_file; then
+    msg_info "Enterprise Ceph repository is commented"
+  else
+    msg_error "Enterprise Ceph repository is missing"
+  fi
+
+  # Escolha do usuário
+  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Repository Configuration" --menu "Choose which repositories to activate:" 15 60 2 \
+  "1" "Use Non-Enterprise Repositories" \
+  "2" "Use Enterprise Repositories" 3>&2 2>&1 1>&3)
 
   case $CHOICE in
     1)  # Switch to Non-Production Repositories
       msg_info "Switching to Non-Production Repositories"
 
-      # Backup current repository files
-      cp $enterprise_repo_file ${enterprise_repo_file}.bak
-      cp $ceph_repo_file ${ceph_repo_file}.bak
-      msg_ok "Backup created for repository files"
-
-      # Comment the enterprise repositories
+      # Comentar o repositório enterprise no pve-enterprise.list
       if grep -q '^deb https://enterprise.proxmox.com/debian/pve' $enterprise_repo_file; then
         sed -i 's|^deb https://enterprise.proxmox.com/debian/pve|#deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
         msg_ok "Commented Proxmox enterprise repository"
       fi
 
-      if grep -q '^deb https://enterprise.proxmox.com/debian/ceph' $ceph_repo_file; then
-        sed -i 's|^deb https://enterprise.proxmox.com/debian/ceph|#deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
-        msg_ok "Commented Ceph enterprise repository"
-      fi
-
-      # Add or descomentar os repositórios não-produção de Proxmox e Ceph
-      if grep -q '^#deb http://download.proxmox.com/debian/pve' /etc/apt/sources.list; then
-        sed -i 's|^#deb http://download.proxmox.com/debian/pve|deb http://download.proxmox.com/debian/pve|' /etc/apt/sources.list
+      # Acrescentar ou descomentar repositório non-subscription em /etc/apt/sources.list
+      if grep -q '^#deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        sed -i 's|^#deb http://download.proxmox.com/debian/pve|deb http://download.proxmox.com/debian/pve|' $pve_repo_file
         msg_ok "Descomentado Proxmox non-production repository"
-      elif ! grep -q '^deb http://download.proxmox.com/debian/pve' /etc/apt/sources.list; then
-        echo -e "\n# NOT recommended for production use" >> /etc/apt/sources.list
-        echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" >> /etc/apt/sources.list
+      elif ! grep -q '^deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        echo -e "\n# NOT recommended for production use" >> $pve_repo_file
+        echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" >> $pve_repo_file
         msg_ok "Adicionado Proxmox non-production repository"
       fi
 
-      if grep -q '^#deb http://download.proxmox.com/debian/ceph-quincy' /etc/apt/sources.list; then
-        sed -i 's|^#deb http://download.proxmox.com/debian/ceph-quincy|deb http://download.proxmox.com/debian/ceph-quincy|' /etc/apt/sources.list
+      # Comentar o repositório enterprise no ceph.list
+      if grep -q '^deb https://enterprise.proxmox.com/debian/ceph-quincy' $ceph_repo_file; then
+        sed -i 's|^deb https://enterprise.proxmox.com/debian/ceph-quincy|#deb https://enterprise.proxmox.com/debian/ceph-quincy|' $ceph_repo_file
+        msg_ok "Commented Ceph enterprise repository"
+      fi
+
+      # Acrescentar ou descomentar repositório non-subscription Ceph
+      if grep -q '^#deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
+        sed -i 's|^#deb http://download.proxmox.com/debian/ceph-quincy|deb http://download.proxmox.com/debian/ceph-quincy|' $pve_repo_file
         msg_ok "Descomentado Ceph non-production repository"
-      elif ! grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' /etc/apt/sources.list; then
-        echo -e "\n# Not for production ceph" >> /etc/apt/sources.list
-        echo "deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription" >> /etc/apt/sources.list
+      elif ! grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
+        echo -e "\n# Not for production ceph" >> $pve_repo_file
+        echo "deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription" >> $pve_repo_file
         msg_ok "Adicionado Ceph non-production repository"
       fi
 
-      msg_ok "Switched to Non-Production Repositories"
-      echo ""
-      read -p "Press Enter to continue..."
       ;;
       
     2)  # Switch to Enterprise Repositories
       msg_info "Switching to Enterprise Repositories"
 
-      # Comentar os repositórios não-produção
-      if grep -q '^deb http://download.proxmox.com/debian/pve' /etc/apt/sources.list; then
-        sed -i 's|^deb http://download.proxmox.com/debian/pve|#deb http://download.proxmox.com/debian/pve|' /etc/apt/sources.list
+      # Comentar o repositório non-subscription em /etc/apt/sources.list
+      if grep -q '^deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        sed -i 's|^deb http://download.proxmox.com/debian/pve|#deb http://download.proxmox.com/debian/pve|' $pve_repo_file
         msg_ok "Comentado Proxmox non-production repository"
       fi
 
-      if grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' /etc/apt/sources.list; then
-        sed -i 's|^deb http://download.proxmox.com/debian/ceph-quincy|#deb http://download.proxmox.com/debian/ceph-quincy|' /etc/apt/sources.list
-        msg_ok "Comentado Ceph non-production repository"
-      fi
-
-      # Descomentar os repositórios enterprise se estiverem comentados
+      # Descomentar repositório enterprise no pve-enterprise.list
       if grep -q '^#deb https://enterprise.proxmox.com/debian/pve' $enterprise_repo_file; then
         sed -i 's|^#deb https://enterprise.proxmox.com/debian/pve|deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
         msg_ok "Descomentado Proxmox enterprise repository"
       fi
 
-      if grep -q '^#deb https://enterprise.proxmox.com/debian/ceph' $ceph_repo_file; then
-        sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph|deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
-        msg_ok "Descomentado Ceph enterprise repository"
+      # Comentar repositório non-subscription Ceph
+      if grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' $pve_repo_file; then
+        sed -i 's|^deb http://download.proxmox.com/debian/ceph-quincy|#deb http://download.proxmox.com/debian/ceph-quincy|' $pve_repo_file
+        msg_ok "Comentado Ceph non-production repository"
       fi
 
-      msg_ok "Switched to Enterprise Repositories"
-      echo ""
-      read -p "Press Enter to continue..."
-      ;;
-      
-    3)  # Return to menu
-      msg_info "Returning to the main menu"
+      # Descomentar repositório enterprise no ceph.list
+      if grep -q '^#deb https://enterprise.proxmox.com/debian/ceph-quincy' $ceph_repo_file; then
+        sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph-quincy|deb https://enterprise.proxmox.com/debian/ceph-quincy|' $ceph_repo_file
+        msg_ok "Descomentado Ceph enterprise repository"
+      fi
       ;;
   esac
+
+  echo ""
+  read -p "Press Enter to continue..."
 }
+
 
 
 
