@@ -327,7 +327,7 @@ modify_repos() {
 # Main menu loop
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 70 10 \  # Adjusted height to 20 and width to 70
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 5 \  # Adjusted to fit 5 options
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
