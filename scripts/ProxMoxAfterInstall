@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V8
+    After Install Script for Proxmox -V9
             by Daniel Brunod
          
 
@@ -324,22 +324,150 @@ modify_repos() {
   read -p "Press Enter to continue..."
 }
 
-# Main menu loop
+# Function to enable PCI Passthrough
+enable_pci_passthrough() {
+  msg_info "PCI Passthrough allows a physical PCI device to be assigned directly to a virtual machine, bypassing the host system. This is particularly useful for performance-critical applications such as GPU-intensive workloads or high-speed network interfaces."
+  
+  echo ""
+  read -p "Press Enter to continue..."
+  
+  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "PCI Passthrough Configuration" --menu "Select the chipset type:" 15 60 3 \
+  "1" "Intel Chips" \
+  "2" "AMD Chips" \
+  "3" "Revert PCI Passthrough" 3>&2 2>&1 1>&3)
+
+  case $CHOICE in
+    1)
+      configure_intel_pci_passthrough
+      ;;
+    2)
+      configure_amd_pci_passthrough
+      ;;
+    3)
+      revert_pci_passthrough
+      ;;
+    *)
+      msg_error "Invalid option selected"
+      ;;
+  esac
+}
+
+# Function to configure Intel PCI Passthrough
+configure_intel_pci_passthrough() {
+  msg_info "Configuring PCI Passthrough for Intel Chipset"
+
+  # Check if the line exists and comment it
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+  fi
+
+  # Add the Intel parameters to the line if they don't already exist
+  if ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
+    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' >> /etc/default/grub
+    msg_ok "Intel IOMMU parameters added to GRUB"
+  else
+    msg_info "Intel IOMMU parameters already exist"
+  fi
+
+  # Update GRUB
+  update-grub &>/dev/null
+  msg_ok "GRUB updated"
+
+  # Add vfio modules to /etc/modules
+  if ! grep -q 'vfio' /etc/modules; then
+    echo -e "vfio\nvfio_iommu_type1\nvfio_pci" >> /etc/modules
+    msg_ok "VFIO modules added to /etc/modules"
+  else
+    msg_info "VFIO modules already exist in /etc/modules"
+  fi
+
+  echo ""
+  msg_info "A system reboot is required for changes to take effect."
+}
+
+# Function to configure AMD PCI Passthrough
+configure_amd_pci_passthrough() {
+  msg_info "Configuring PCI Passthrough for AMD Chipset"
+
+  # Check if the line exists and comment it
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+  fi
+
+  # Add the AMD parameters to the line if they don't already exist
+  if ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
+    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' >> /etc/default/grub
+    msg_ok "AMD IOMMU parameters added to GRUB"
+  else
+    msg_info "AMD IOMMU parameters already exist"
+  fi
+
+  # Update GRUB
+  update-grub &>/dev/null
+  msg_ok "GRUB updated"
+
+  # Add vfio modules to /etc/modules
+  if ! grep -q 'vfio' /etc/modules; then
+    echo -e "vfio\nvfio_iommu_type1\nvfio_pci" >> /etc/modules
+    msg_ok "VFIO modules added to /etc/modules"
+  else
+    msg_info "VFIO modules already exist in /etc/modules"
+  fi
+
+  echo ""
+  msg_info "A system reboot is required for changes to take effect."
+}
+
+# Function to revert PCI Passthrough
+revert_pci_passthrough() {
+  msg_info "Reverting PCI Passthrough configuration"
+
+  # Check and comment Intel or AMD IOMMU configuration in GRUB
+  if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "Intel IOMMU configuration reverted"
+  fi
+
+  if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "AMD IOMMU configuration reverted"
+  fi
+
+  # Uncomment default GRUB configuration
+  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
+    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+    msg_ok "Default GRUB configuration restored"
+  fi
+
+  # Update GRUB
+  update-grub &>/dev/null
+  msg_ok "GRUB updated"
+
+  # Remove VFIO modules from /etc/modules
+  sed -i '/vfio/d' /etc/modules
+  msg_ok "VFIO modules removed from /etc/modules"
+
+  echo ""
+  msg_info "A system reboot is required to fully revert changes."
+}
+
+
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 5 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 6 \
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
     "4" "Modify Repositories" \
-    "5" "Exit" 3>&2 2>&1 1>&3)
+    "5" "Enable PCI Passthrough" \
+    "6" "Exit" 3>&2 2>&1 1>&3)
 
     case $CHOICE in
       1)
         update_proxmox
         ;;
       2)
-        modify_dns  # Chamada da função modify_dns
+        modify_dns
         ;;
       3)
         display_active_repos
@@ -348,16 +476,18 @@ main_menu() {
         modify_repos
         ;;
       5)
+        enable_pci_passthrough 
+        ;;
+      6)
         clear
         exit 0
         ;;
       *)
-        echo "Invalid option, please select again."
+        msg_error "Invalid option, please select again."
         ;;
     esac
   done
 }
-
 
 
 # Start the script
