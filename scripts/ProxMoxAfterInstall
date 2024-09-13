@@ -62,107 +62,21 @@ update_proxmox() {
   read -p "Press Enter to continue..."
 }
 
-# Function to check and modify DNS in /etc/resolv.conf
-modify_dns() {
-  local resolv_file="/etc/resolv.conf"
-  local bak_file="${resolv_file}.bak"
-
-  msg_info "Checking current DNS configuration"
-  
-  # Display current nameservers
-  echo "Current DNS nameservers:"
-  grep -E '^nameserver' $resolv_file || echo "No nameservers found."
-
-  echo ""
-  read -p "Press Enter to continue..."
-
-  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "DNS Configuration" --menu "Choose what to do with the current DNS configuration:" 15 60 3 \
-  "1" "Keep current DNS configuration" \
-  "2" "Set new DNS servers" \
-  "3" "Exit to menu" 3>&2 2>&1 1>&3)
-
-  case $CHOICE in
-    1)
-      msg_ok "Keeping current DNS configuration"
-      echo ""
-      read -p "Press Enter to continue..."
-      ;;
-    2)
-      msg_info "Setting new DNS servers"
-      # Present DNS options to the user
-      NEW_DNS=$(whiptail --backtitle "Proxmox Server Setup" --title "Choose DNS Servers" --menu "Select a DNS option:" 15 60 4 \
-      "1" "Cloudflare (1.1.1.1, 1.0.0.1)" \
-      "2" "Cloudflare Malware Protection (1.1.1.2, 1.0.0.2)" \
-      "3" "Cloudflare Malware & Adult Content Filter (1.1.1.3, 1.0.0.3)" \
-      "4" "Google DNS (8.8.8.8, 8.8.4.4)" 3>&2 2>&1 1>&3)
-
-      # Create a backup of the current resolv.conf
-      if [[ -f $bak_file ]]; then
-        msg_info "Backup file $bak_file already exists, it will be overwritten"
-      else
-        msg_info "Creating backup of current DNS configuration at $bak_file"
-      fi
-      cp $resolv_file $bak_file
-      msg_ok "Backup created at $bak_file"
-
-      # Comment out all existing nameserver entries
-      sed -i 's/^nameserver/#&/' $resolv_file
-
-      # Set new nameservers based on user choice, descomentando se existirem ou adicionando se não
-      case $NEW_DNS in
-        1)
-          sed -i '/1.1.1.1/s/^#//' $resolv_file || echo "nameserver 1.1.1.1" >> $resolv_file
-          sed -i '/1.0.0.1/s/^#//' $resolv_file || echo "nameserver 1.0.0.1" >> $resolv_file
-          msg_ok "Cloudflare DNS configured"
-          ;;
-        2)
-          sed -i '/1.1.1.2/s/^#//' $resolv_file || echo "nameserver 1.1.1.2" >> $resolv_file
-          sed -i '/1.0.0.2/s/^#//' $resolv_file || echo "nameserver 1.0.0.2" >> $resolv_file
-          msg_ok "Cloudflare DNS with Malware Protection configured"
-          ;;
-        3)
-          sed -i '/1.1.1.3/s/^#//' $resolv_file || echo "nameserver 1.1.1.3" >> $resolv_file
-          sed -i '/1.0.0.3/s/^#//' $resolv_file || echo "nameserver 1.0.0.3" >> $resolv_file
-          msg_ok "Cloudflare DNS with Malware & Adult Content Protection configured"
-          ;;
-        4)
-          sed -i '/8.8.8.8/s/^#//' $resolv_file || echo "nameserver 8.8.8.8" >> $resolv_file
-          sed -i '/8.8.4.4/s/^#//' $resolv_file || echo "nameserver 8.8.4.4" >> $resolv_file
-          msg_ok "Google DNS configured"
-          ;;
-      esac
-
-      # Test the DNS with a ping to GitHub
-      if ping -c 1 github.com &>/dev/null; then
-        msg_ok "DNS configuration is working correctly"
-      else
-        msg_error "DNS configuration failed, please check your settings"
-      fi
-
-      echo ""
-      read -p "Press Enter to continue..."
-      ;;
-    3)
-      msg_info "Returning to the main menu"
-      ;;
-  esac
-}
-
 # Function to modify repositories
 modify_repos() {
   local pve_repo_file="/etc/apt/sources.list"
   local enterprise_repo_file="/etc/apt/sources.list.d/pve-enterprise.list"
   local ceph_repo_file="/etc/apt/sources.list.d/ceph.list"
-  
+
   msg_info "Checking existing repository configuration"
 
-  # Check and display the current repository configuration
+  # Display current repository configuration
   echo "Current Proxmox Repositories:"
   grep -E '^deb' $pve_repo_file || echo "No repositories found in $pve_repo_file"
-  
+
   echo "Enterprise Repositories:"
   grep -E '^deb' $enterprise_repo_file || echo "No repositories found in $enterprise_repo_file"
-  
+
   echo "Ceph Repositories:"
   grep -E '^deb' $ceph_repo_file || echo "No repositories found in $ceph_repo_file"
 
@@ -184,16 +98,23 @@ modify_repos() {
       cp $ceph_repo_file ${ceph_repo_file}.bak
       msg_ok "Backup created for repository files"
 
-      # Configure non-production Proxmox repositories
-      sed -i 's/^deb/#deb/' $enterprise_repo_file
-      sed -i 's/^deb/#deb/' $ceph_repo_file
+      # Disable enterprise repositories by commenting out specific lines
+      sed -i 's|^deb https://enterprise.proxmox.com/debian/pve|#deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
+      sed -i 's|^deb https://enterprise.proxmox.com/debian/ceph|#deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
 
-      # Add non-production repositories if not already present
-      grep -qxF '# NOT recommended for production use' $pve_repo_file || echo '# NOT recommended for production use' >> $pve_repo_file
-      grep -qxF 'deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' $pve_repo_file || echo 'deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' >> $pve_repo_file
+      # Add or descomentar os repositórios não-produção de Proxmox e Ceph
+      grep -q '^# NOT recommended for production use' $pve_repo_file || echo '# NOT recommended for production use' >> $pve_repo_file
+      if grep -q '^#deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        sed -i 's|^#deb http://download.proxmox.com/debian/pve|deb http://download.proxmox.com/debian/pve|' $pve_repo_file
+      else
+        echo 'deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription' >> $pve_repo_file
+      fi
 
-      grep -qxF '# Not for production ceph' $ceph_repo_file || echo '# Not for production ceph' >> $ceph_repo_file
-      grep -qxF 'deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription' $ceph_repo_file || echo 'deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription' >> $ceph_repo_file
+      if grep -q '^#deb http://download.proxmox.com/debian/ceph-quincy' $ceph_repo_file; then
+        sed -i 's|^#deb http://download.proxmox.com/debian/ceph-quincy|deb http://download.proxmox.com/debian/ceph-quincy|' $ceph_repo_file
+      else
+        echo 'deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription' >> $ceph_repo_file
+      fi
 
       msg_ok "Switched to Non-Production Repositories"
       echo ""
@@ -202,12 +123,27 @@ modify_repos() {
     2)
       msg_info "Switching to Enterprise Repositories"
 
-      # Comment out non-production repositories and enable enterprise
-      sed -i 's/^deb/#deb/' $pve_repo_file
-      sed -i 's/^deb/#deb/' $ceph_repo_file
+      # Disable non-production repositories and enable enterprise
+      if grep -q '^deb http://download.proxmox.com/debian/pve' $pve_repo_file; then
+        sed -i 's|^deb http://download.proxmox.com/debian/pve|#deb http://download.proxmox.com/debian/pve|' $pve_repo_file
+      fi
 
-      sed -i 's/^#deb/deb/' $enterprise_repo_file
-      sed -i 's/^#deb/deb/' $ceph_repo_file
+      if grep -q '^deb http://download.proxmox.com/debian/ceph-quincy' $ceph_repo_file; then
+        sed -i 's|^deb http://download.proxmox.com/debian/ceph-quincy|#deb http://download.proxmox.com/debian/ceph-quincy|' $ceph_repo_file
+      fi
+
+      # Descomentar ou adicionar repositórios enterprise
+      if grep -q '^#deb https://enterprise.proxmox.com/debian/pve' $enterprise_repo_file; then
+        sed -i 's|^#deb https://enterprise.proxmox.com/debian/pve|deb https://enterprise.proxmox.com/debian/pve|' $enterprise_repo_file
+      else
+        echo 'deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise' >> $enterprise_repo_file
+      fi
+
+      if grep -q '^#deb https://enterprise.proxmox.com/debian/ceph' $ceph_repo_file; then
+        sed -i 's|^#deb https://enterprise.proxmox.com/debian/ceph|deb https://enterprise.proxmox.com/debian/ceph|' $ceph_repo_file
+      else
+        echo 'deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise' >> $ceph_repo_file
+      fi
 
       msg_ok "Switched to Enterprise Repositories"
       echo ""
