@@ -73,11 +73,13 @@ function show_menu {
     echo "Welcome to the Fail2Ban installation and configuration script for Proxmox VE"
     echo ""
     echo "Choose an option:"
+    echo ""
     echo "1. Install Fail2Ban"
     echo "2. Configure Fail2Ban for Proxmox and SSH"
     echo "3. Restart Fail2Ban"
     echo "4. Unblock IP"
     echo "5. Exit"
+    echo ""
 }
 
 
