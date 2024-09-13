@@ -19,7 +19,7 @@ header_info() {
       After Install Script for Proxmox
             by Daniel Brunod
 
-read -p "Press Enter to continue..."
+
 
 EOF
 }
@@ -173,4 +173,5 @@ main_menu() {
 
 # Start the script
 header_info
+read -p "Press Enter to continue..."
 main_menu
