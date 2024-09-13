@@ -362,15 +362,14 @@ configure_intel_pci_passthrough() {
     msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
   fi
 
-  # Add the Intel parameters to the line or modify it if it exists
-  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
-    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|' /etc/default/grub
-    msg_ok "Re-enabled Intel IOMMU parameters in GRUB"
-  elif ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' >> /etc/default/grub
-    msg_ok "Added Intel IOMMU parameters to GRUB"
-  else
-    msg_info "Intel IOMMU parameters already exist"
+  # Add the Intel parameters on a new line if not already present
+  if ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
+    if ! grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
+      echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' >> /etc/default/grub
+      msg_ok "Added Intel IOMMU parameters below the commented line"
+    else
+      msg_info "Intel IOMMU parameters already exist"
+    fi
   fi
 
   # Update GRUB
@@ -400,15 +399,14 @@ configure_amd_pci_passthrough() {
     msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
   fi
 
-  # Add the AMD parameters to the line or modify it if it exists
-  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
-    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|' /etc/default/grub
-    msg_ok "Re-enabled AMD IOMMU parameters in GRUB"
-  elif ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' >> /etc/default/grub
-    msg_ok "Added AMD IOMMU parameters to GRUB"
-  else
-    msg_info "AMD IOMMU parameters already exist"
+  # Add the AMD parameters on a new line if not already present
+  if ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
+    if ! grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
+      echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' >> /etc/default/grub
+      msg_ok "Added AMD IOMMU parameters below the commented line"
+    else
+      msg_info "AMD IOMMU parameters already exist"
+    fi
   fi
 
   # Update GRUB
