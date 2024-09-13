@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V11
+    After Install Script for Proxmox -V12
             by Daniel Brunod
          
 
@@ -356,20 +356,12 @@ enable_pci_passthrough() {
 configure_intel_pci_passthrough() {
   msg_info "Configuring PCI Passthrough for Intel Chipset"
 
-  # Check if the line exists and comment it
-  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
-    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
-    msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
-  fi
-
-  # Add the Intel parameters on a new line if not already present
-  if ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
-    if ! grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
-      echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' >> /etc/default/grub
-      msg_ok "Added Intel IOMMU parameters below the commented line"
-    else
-      msg_info "Intel IOMMU parameters already exist"
-    fi
+  # Modify the GRUB_CMDLINE_LINUX_DEFAULT line to set Intel IOMMU
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "Updated GRUB_CMDLINE_LINUX_DEFAULT for Intel IOMMU"
+  else
+    msg_error "GRUB_CMDLINE_LINUX_DEFAULT line not found in /etc/default/grub"
   fi
 
   # Update GRUB
@@ -393,20 +385,12 @@ configure_intel_pci_passthrough() {
 configure_amd_pci_passthrough() {
   msg_info "Configuring PCI Passthrough for AMD Chipset"
 
-  # Check if the line exists and comment it
-  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
-    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
-    msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
-  fi
-
-  # Add the AMD parameters on a new line if not already present
-  if ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
-    if ! grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
-      echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' >> /etc/default/grub
-      msg_ok "Added AMD IOMMU parameters below the commented line"
-    else
-      msg_info "AMD IOMMU parameters already exist"
-    fi
+  # Modify the GRUB_CMDLINE_LINUX_DEFAULT line to set AMD IOMMU
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "Updated GRUB_CMDLINE_LINUX_DEFAULT for AMD IOMMU"
+  else
+    msg_error "GRUB_CMDLINE_LINUX_DEFAULT line not found in /etc/default/grub"
   fi
 
   # Update GRUB
@@ -426,25 +410,17 @@ configure_amd_pci_passthrough() {
   read -p "Press Enter to continue..."
 }
 
+
 # Function to revert PCI Passthrough
 revert_pci_passthrough() {
   msg_info "Reverting PCI Passthrough configuration"
 
-  # Check and comment Intel or AMD IOMMU configuration in GRUB
-  if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
-    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|' /etc/default/grub
-    msg_ok "Intel IOMMU configuration reverted"
-  fi
-
-  if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
-    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|' /etc/default/grub
-    msg_ok "AMD IOMMU configuration reverted"
-  fi
-
-  # Uncomment default GRUB configuration
-  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
-    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
-    msg_ok "Default GRUB configuration restored"
+  # Modify the GRUB_CMDLINE_LINUX_DEFAULT line to revert back to "quiet"
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+    msg_ok "Reverted GRUB_CMDLINE_LINUX_DEFAULT to 'quiet'"
+  else
+    msg_error "GRUB_CMDLINE_LINUX_DEFAULT line not found in /etc/default/grub"
   fi
 
   # Update GRUB
@@ -459,6 +435,7 @@ revert_pci_passthrough() {
   msg_ok "A system reboot is required to fully revert changes."
   read -p "Press Enter to continue..."
 }
+
 
 main_menu() {
   while true; do
