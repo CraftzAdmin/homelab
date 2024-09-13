@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+
+# Proxmox Server Setup Script
+# Author: Your Name
+# License: MIT
+# This script is used for setting up a Proxmox server from scratch
+
+header_info() {
+  clear
+  cat <<"EOF"
+
+ ██████╗██████╗  █████╗ ███████╗████████╗███████╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝╚══██╔══╝╚══███╔╝
+██║     ██████╔╝███████║█████╗     ██║     ███╔╝ 
+██║     ██╔══██╗██╔══██║██╔══╝     ██║    ███╔╝  
+╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
+          
+      After Install Script for Proxmox
+            by Daniel Brunod
+         
+
+EOF
+}
+
+# Colors for messages
+RD=$(echo "\033[01;31m")
+YW=$(echo "\033[33m")
+GN=$(echo "\033[1;92m")
+CL=$(echo "\033[m")
+BFR="\\r\\033[K"
+HOLD="-"
+CM="${GN}✓${CL}"
+CROSS="${RD}✗${CL}"
+
+# Set script to exit on error and inherit the error flags
+set -euo pipefail
+shopt -s inherit_errexit nullglob
+
+# Message functions
+msg_info() {
+  local msg="$1"
+  echo -ne " ${HOLD} ${YW}${msg}..."
+}
+
+msg_ok() {
+  local msg="$1"
+  echo -e "${BFR} ${CM} ${GN}${msg}${CL}"
+}
+
+msg_error() {
+  local msg="$1"
+  echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
+}
+
+# Function to update and upgrade Proxmox
+update_proxmox() {
+  msg_info "Updating Proxmox VE"
+  apt update && apt upgrade -y &>/dev/null
+  msg_ok "Proxmox VE Updated"
+}
+
+# Function to check and modify DNS in /etc/resolv.conf
+modify_dns() {
+  local resolv_file="/etc/resolv.conf"
+  msg_info "Checking current DNS configuration"
+  
+  # Display current nameservers
+  echo "Current DNS nameservers:"
+  grep -E '^nameserver' $resolv_file || echo "No nameservers found."
+
+  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "DNS Configuration" --menu "Choose what to do with the current DNS configuration:" 15 60 3 \
+  "1" "Keep current DNS configuration" \
+  "2" "Set new DNS servers" \
+  "3" "Exit to menu" 3>&2 2>&1 1>&3)
+
+  case $CHOICE in
+    1)
+      msg_ok "Keeping current DNS configuration"
+      ;;
+    2)
+      msg_info "Setting new DNS servers"
+      # Present DNS options to the user
+      NEW_DNS=$(whiptail --backtitle "Proxmox Server Setup" --title "Choose DNS Servers" --menu "Select a DNS option:" 15 60 4 \
+      "1" "Cloudflare (1.1.1.1, 1.0.0.1)" \
+      "2" "Cloudflare Malware Protection (1.1.1.2, 1.0.0.2)" \
+      "3" "Cloudflare Malware & Adult Content Filter (1.1.1.3, 1.0.0.3)" \
+      "4" "Google DNS (8.8.8.8, 8.8.4.4)" 3>&2 2>&1 1>&3)
+
+      # Backup the current resolv.conf
+      cp $resolv_file ${resolv_file}.bak
+
+      # Comment out all existing nameserver entries
+      sed -i 's/^nameserver/#&/' $resolv_file
+
+      # Set new nameservers based on user choice
+      case $NEW_DNS in
+        1)
+          echo "nameserver 1.1.1.1" >> $resolv_file
+          echo "nameserver 1.0.0.1" >> $resolv_file
+          msg_ok "Cloudflare DNS configured"
+          ;;
+        2)
+          echo "nameserver 1.1.1.2" >> $resolv_file
+          echo "nameserver 1.0.0.2" >> $resolv_file
+          msg_ok "Cloudflare DNS with Malware Protection configured"
+          ;;
+        3)
+          echo "nameserver 1.1.1.3" >> $resolv_file
+          echo "nameserver 1.0.0.3" >> $resolv_file
+          msg_ok "Cloudflare DNS with Malware & Adult Content Protection configured"
+          ;;
+        4)
+          echo "nameserver 8.8.8.8" >> $resolv_file
+          echo "nameserver 8.8.4.4" >> $resolv_file
+          msg_ok "Google DNS configured"
+          ;;
+      esac
+      ;;
+    3)
+      msg_info "Returning to the main menu"
+      ;;
+  esac
+}
+
+# Main menu loop
+main_menu() {
+  while true; do
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 3 \
+    "1" "Update and Upgrade Proxmox" \
+    "2" "Modify DNS Configuration" \
+    "3" "Exit" 3>&2 2>&1 1>&3)
+
+    case $CHOICE in
+      1)
+        update_proxmox
+        ;;
+      2)
+        modify_dns
+        ;;
+      3)
+        clear
+        exit 0
+        ;;
+      *)
+        echo "Invalid option, please select again."
+        ;;
+    esac
+  done
+}
+
+# Start the script
+header_info
+main_menu
