@@ -17,8 +17,8 @@ function header_info {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-        Script Instalação Fail2Ban
-         Por Daniel Brunod
+      Fail2Ban Install Script for Proxmox
+            by Daniel Brunod
          
 EOF
 }
@@ -26,10 +26,10 @@ EOF
 # Função para verificar se a função [sshd] já foi comentada
 function check_sshd_commented {
     if grep -q "#port    = ssh" /etc/fail2ban/jail.local; then
-        echo "A seção [sshd] já foi comentada."
+        echo "The [sshd] section has already been commented out."
         return 0
     else
-        echo "A seção [sshd] não foi comentada ainda."
+        echo "The [sshd] section has not been commented out yet."
         return 1
     fi
 }
@@ -51,16 +51,16 @@ logpath = %(sshd_log)s
 backend = systemd"
 
     if grep -q "\[proxmox\]" /etc/fail2ban/jail.local && grep -q "$PROXMOX_SECTION" /etc/fail2ban/jail.local; then
-        echo "A seção [proxmox] já existe e está configurada corretamente."
+        echo "The [proxmox] section already exists and is configured correctly."
     else
-        echo "A seção [proxmox] precisa ser configurada."
+        echo "The [proxmox] section needs to be configured."
         return 1
     fi
 
     if grep -q "\[sshd\]" /etc/fail2ban/jail.local && grep -q "$SSHD_SECTION" /etc/fail2ban/jail.local; then
-        echo "A seção [sshd] já existe e está configurada corretamente."
+        echo "The [sshd] section already exists and is configured correctly."
     else
-        echo "A seção [sshd] precisa ser configurada."
+        echo "The [sshd] section needs to be configured."
         return 1
     fi
 
@@ -70,50 +70,51 @@ backend = systemd"
 
 
 function show_menu {
-    echo "Bem-vindo ao script de instalação e configuração do Fail2Ban para Proxmox VE"
-    echo "Escolha uma opção:"
-    echo "1. Instalar Fail2Ban"
-    echo "2. Configurar Fail2Ban para Proxmox e SSH"
-    echo "3. Reiniciar Fail2Ban"
-    echo "4. Desbloquear IP"
-    echo "5. Sair"
+    echo "Welcome to the Fail2Ban installation and configuration script for Proxmox VE"
+    echo ""
+    echo "Choose an option:"
+    echo "1. Install Fail2Ban"
+    echo "2. Configure Fail2Ban for Proxmox and SSH"
+    echo "3. Restart Fail2Ban"
+    echo "4. Unblock IP"
+    echo "5. Exit"
 }
 
 
 while true; do
     header_info
     show_menu
-    read -p "Opção: " option
+    read -p "Option: " option
 
     case $option in
         1)
-            echo "Atualizando pacotes e instalando Fail2Ban..."
+            echo "Updating packages and installing Fail2Ban..."
             apt update
             apt install -y fail2ban
-            echo "Fail2Ban instalado com sucesso."
+            echo "Fail2Ban installed successfully."
             ;;
         
        2)
-            echo "Configurando Fail2Ban para Proxmox e SSH..."
+            echo "Configuring Fail2Ban for Proxmox and SSH..."
 
             # Cria o arquivo jail.local se não existir e copia jail.conf como base
             if [ ! -f /etc/fail2ban/jail.local ]; then
                 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-                echo "Arquivo jail.local criado a partir de jail.conf."
+                echo "jail.local file created from jail.conf."
             else
-                echo "Arquivo jail.local já existe."
+                echo "Jail.local file already exists."
             fi
 
             # Verifica se a seção [sshd] já foi comentada
             if ! check_sshd_commented; then
                 # Comenta as linhas específicas da seção [sshd]
                 sed -i '/\[sshd\]/,/backend = %(sshd_backend)s/ s/^\([^#].*\)/#\1/' /etc/fail2ban/jail.local
-                echo "As linhas específicas da seção [sshd] foram comentadas."
+                echo "Specific lines in the [sshd] section have been commented out."
             fi
 
             # Verifica se as seções [proxmox] e [sshd] já existem e estão corretas
             if ! check_proxmox_ssh_sections; then
-                echo "Adicionando as seções [proxmox] e [sshd]..."
+                echo "Adding the [proxmox] and [sshd] sections..."
 
                 # Adiciona a configuração para Proxmox e SSH
                 cat <<EOL >> /etc/fail2ban/jail.local
@@ -132,10 +133,10 @@ port    = ssh
 logpath = %(sshd_log)s
 backend = systemd
 EOL
-                echo "Configuração de Fail2Ban para Proxmox e SSH adicionada."
+                echo "Fail2Ban configuration for Proxmox and SSH added."
             else
-                echo "As seções [proxmox] e [sshd] já estão configuradas corretamente. Nenhuma ação necessária."
-                read -p "Pressione Enter para voltar ao menu principal..."
+                echo "The [proxmox] and [sshd] sections are already configured correctly. No action required."
+                read -p "Press Enter to return to the main menu..."
                 continue
             fi
 
@@ -147,31 +148,31 @@ ignoreregex =
 journalmatch = _SYSTEMD_UNIT=pvedaemon.service
 EOL
 
-            echo "Filtro para Proxmox criado."
+            echo "Filter for Proxmox created."
             ;;
         
         3)
-            echo "Reiniciando Fail2Ban para aplicar as configurações..."
+            echo "Restarting Fail2Ban to apply settings..."
             systemctl restart fail2ban
-            echo "Fail2Ban reiniciado."
+            echo "Fail2Ban restarted!"
             ;;
         
         4)
-            read -p "Digite o IP a ser desbloqueado: " ip
+            read -p "Enter the IP to be unblocked: " ip
             fail2ban-client unban $ip
-            echo "IP $ip desbloqueado."
+            echo "IP $ip unlocked."
             ;;
         
         5)
-            echo "Saindo..."
+            echo "Leaving..."
             exit 0
             ;;
         
         *)
-            echo "Opção inválida. Tente novamente."
+            echo "Invalid option. Please try again."
             ;;
     esac
 
     # Pausa antes de voltar ao menu
-    read -p "Pressione Enter para voltar ao menu principal..."
+    read -p "Press Enter to return to the main menu..."
 done
