@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V5
+    After Install Script for Proxmox -V6
             by Daniel Brunod
          
 
@@ -327,12 +327,12 @@ modify_repos() {
 # Main menu loop
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 5 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 70 5 \  # Ajustei a altura para 20 e a largura para 70
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
     "4" "Modify Repositories" \
-    "5" "Exit" 3>&1 1>&2 2>&3)
+    "5" "Exit" 3>&2 2>&1 1>&3)  # Aqui simplifiquei a captura de saída, mantendo apenas o necessário para capturar a escolha
 
     case $CHOICE in
       1)
@@ -357,6 +357,7 @@ main_menu() {
     esac
   done
 }
+
 
 # Start the script
 header_info
