@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V14
+    After Install Script for Proxmox -V15
             by Daniel Brunod
          
 
@@ -460,17 +460,168 @@ remove_proxmox_popup() {
   read -p "Press Enter to continue..."
 }
 
+disable_spectre_meltdown_mitigations() {
+  local cmdline_file="/etc/kernel/cmdline"
+  local grub_file="/etc/default/grub"
+  local backup_file="${cmdline_file}.bak"
+  local grub_backup_file="${grub_file}.bak"
+
+  msg_info "Disable Spectre Meltdown Mitigations Menu"
+
+  CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Disable Spectre Meltdown Mitigations" --menu "Choose an option:" 15 60 2 \
+  "1" "Disable Spectre/Meltdown Mitigations" \
+  "2" "Revert to Backup" 3>&2 2>&1 1>&3)
+
+  case $CHOICE in
+    1)
+      apply_disable_mitigations
+      ;;
+    2)
+      revert_disable_mitigations
+      ;;
+    *)
+      msg_error "Invalid option selected"
+      ;;
+  esac
+}
+
+# Function to apply disabling mitigations
+apply_disable_mitigations() {
+  local cmdline_file="/etc/kernel/cmdline"
+  local grub_file="/etc/default/grub"
+  local backup_file="${cmdline_file}.bak"
+  local grub_backup_file="${grub_file}.bak"
+
+  # Backup the current cmdline file and grub file
+  if [[ ! -f $backup_file ]]; then
+    cp $cmdline_file $backup_file
+    msg_ok "Backup created at $backup_file"
+  else
+    msg_info "Backup already exists at $backup_file"
+  fi
+
+  if [[ ! -f $grub_backup_file ]]; then
+    cp $grub_file $grub_backup_file
+    msg_ok "Backup of GRUB created at $grub_backup_file"
+  else
+    msg_info "Backup of GRUB already exists at $grub_backup_file"
+  fi
+
+  # Display current cmdline options
+  msg_info "Current /etc/kernel/cmdline:"
+  cat $cmdline_file
+  echo ""
+  read -p "Press Enter to continue or return to the menu..."
+
+  # Check if the cmdline contains mitigations=off
+  if grep -q "mitigations=off" $cmdline_file; then
+    msg_ok "Spectre/Meltdown mitigations are already disabled"
+  else
+    # Check if there is already a cmdline configuration
+    if grep -q "root=ZFS=rpool/ROOT/pve-1 boot=zfs" $cmdline_file; then
+      msg_info "Existing cmdline found, adding mitigations=off"
+      # Add mitigations=off at the end of the existing line
+      sed -i 's|boot=zfs.*|& mitigations=off|' $cmdline_file
+      msg_ok "Spectre/Meltdown mitigations disabled in /etc/kernel/cmdline"
+    else
+      # If no cmdline configuration exists, add a default one
+      echo "root=ZFS=rpool/ROOT/pve-1 boot=zfs mitigations=off" >> $cmdline_file
+      msg_ok "New cmdline created with mitigations=off"
+    fi
+  fi
+
+  # Modify /etc/default/grub for GRUB_CMDLINE_LINUX_DEFAULT
+  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' $grub_file; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|GRUB_CMDLINE_LINUX_DEFAULT="quiet mitigations=off"|' $grub_file
+    msg_ok "Added mitigations=off to GRUB_CMDLINE_LINUX_DEFAULT in GRUB"
+  elif grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' $grub_file; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt mitigations=off"|' $grub_file
+    msg_ok "Added mitigations=off to AMD IOMMU settings in GRUB"
+  elif grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' $grub_file; then
+    sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt mitigations=off"|' $grub_file
+    msg_ok "Added mitigations=off to Intel IOMMU settings in GRUB"
+  fi
+
+  # Refresh boot configuration
+  proxmox-boot-tool refresh &>/dev/null
+  msg_ok "Boot configuration refreshed"
+
+  # Run update-grub after modifications
+  update-grub &>/dev/null
+  msg_ok "GRUB updated"
+
+  # Show the final state of the cmdline file
+  msg_info "Updated /etc/kernel/cmdline:"
+  cat $cmdline_file
+
+  # Inform that a reboot is required
+  msg_ok "A system reboot is required for changes to take effect."
+  echo ""
+  read -p "Press Enter to continue..."
+}
+
+# Function to revert mitigations by restoring the backup
+revert_disable_mitigations() {
+  local cmdline_file="/etc/kernel/cmdline"
+  local grub_file="/etc/default/grub"
+  local backup_file="${cmdline_file}.bak"
+  local grub_backup_file="${grub_file}.bak"
+
+  # Check if the backup exists for cmdline and grub
+  if [[ -f $backup_file ]]; then
+    cp $backup_file $cmdline_file
+    msg_ok "Reverted /etc/kernel/cmdline to the backup"
+  else
+    msg_error "No cmdline backup file found. Cannot revert."
+  fi
+
+  if [[ -f $grub_backup_file ]]; then
+    cp $grub_backup_file $grub_file
+    msg_ok "Reverted /etc/default/grub to the backup"
+  else
+    msg_error "No GRUB backup file found. Cannot revert."
+  fi
+
+  # Refresh boot configuration
+  proxmox-boot-tool refresh &>/dev/null
+  msg_ok "Boot configuration refreshed"
+
+  # Run update-grub after reverting
+  update-grub &>/dev/null
+  msg_ok "GRUB updated"
+
+  # Inform that a reboot is required to revert the changes
+  msg_ok "A system reboot is required to revert the changes."
+  echo ""
+  read -p "Press Enter to continue..."
+}
+
+reboot_now() {
+  msg_info "Rebooting the system..."
+  read -p "Are you sure you want to reboot now? (y/n): " confirm
+  if [[ $confirm == [yY] ]]; then
+    msg_ok "System is rebooting..."
+    reboot
+  else
+    msg_info "Reboot canceled."
+    read -p "Press Enter to return to the menu..."
+  fi
+}
+
+
 
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 7 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 80 8 \
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
     "4" "Modify Repositories" \
     "5" "Enable PCI Passthrough" \
     "6" "Remove Proxmox Subscription Pop-up" \
-    "7" "Exit" 3>&2 2>&1 1>&3)
+    "7" "Disable Spectre/Meltdown Mitigations" \
+    "8" "Reboot Now" \
+    "9" "Exit" 3>&2 2>&1 1>&3)
 
     case $CHOICE in
       1)
@@ -486,12 +637,18 @@ main_menu() {
         modify_repos
         ;;
       5)
-        enable_pci_passthrough  
+        enable_pci_passthrough
         ;;
       6)
-        remove_proxmox_popup 
+        remove_proxmox_popup
         ;;
       7)
+        disable_spectre_meltdown_mitigations
+        ;;
+      8)
+        reboot_now  
+        ;;
+      9)
         clear
         exit 0
         ;;
@@ -501,6 +658,7 @@ main_menu() {
     esac
   done
 }
+
 
 
 
