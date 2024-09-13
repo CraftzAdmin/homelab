@@ -326,7 +326,7 @@ modify_repos() {
 
 # Function to enable PCI Passthrough
 enable_pci_passthrough() {
-  msg_info "PCI Passthrough allows a physical PCI device to be assigned directly to a virtual machine, bypassing the host system. This is particularly useful for performance-critical applications such as GPU-intensive workloads or high-speed network interfaces."
+  msg_info "PCI Passthrough allows a physical PCI device, like a GPU or network card, to be passed directly to a virtual machine (VM). This allows the VM to use the device at near-native speeds, bypassing the host OS. This feature is commonly used in high-performance environments where direct hardware access is crucial."
   
   echo ""
   read -p "Press Enter to continue..."
@@ -359,12 +359,16 @@ configure_intel_pci_passthrough() {
   # Check if the line exists and comment it
   if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
     sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+    msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
   fi
 
-  # Add the Intel parameters to the line if they don't already exist
-  if ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
+  # Add the Intel parameters to the line or modify it if it exists
+  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' /etc/default/grub; then
+    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "Re-enabled Intel IOMMU parameters in GRUB"
+  elif ! grep -q 'intel_iommu=on iommu=pt' /etc/default/grub; then
     echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt"' >> /etc/default/grub
-    msg_ok "Intel IOMMU parameters added to GRUB"
+    msg_ok "Added Intel IOMMU parameters to GRUB"
   else
     msg_info "Intel IOMMU parameters already exist"
   fi
@@ -383,6 +387,7 @@ configure_intel_pci_passthrough() {
 
   echo ""
   msg_info "A system reboot is required for changes to take effect."
+  read -p "Press Enter to continue..."
 }
 
 # Function to configure AMD PCI Passthrough
@@ -392,12 +397,16 @@ configure_amd_pci_passthrough() {
   # Check if the line exists and comment it
   if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet"' /etc/default/grub; then
     sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="quiet"|#GRUB_CMDLINE_LINUX_DEFAULT="quiet"|' /etc/default/grub
+    msg_ok "Commented existing GRUB_CMDLINE_LINUX_DEFAULT line"
   fi
 
-  # Add the AMD parameters to the line if they don't already exist
-  if ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
+  # Add the AMD parameters to the line or modify it if it exists
+  if grep -q '^#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' /etc/default/grub; then
+    sed -i 's|^#GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"|' /etc/default/grub
+    msg_ok "Re-enabled AMD IOMMU parameters in GRUB"
+  elif ! grep -q 'amd_iommu=on iommu=pt' /etc/default/grub; then
     echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt"' >> /etc/default/grub
-    msg_ok "AMD IOMMU parameters added to GRUB"
+    msg_ok "Added AMD IOMMU parameters to GRUB"
   else
     msg_info "AMD IOMMU parameters already exist"
   fi
@@ -416,6 +425,7 @@ configure_amd_pci_passthrough() {
 
   echo ""
   msg_info "A system reboot is required for changes to take effect."
+  read -p "Press Enter to continue..."
 }
 
 # Function to revert PCI Passthrough
@@ -449,8 +459,8 @@ revert_pci_passthrough() {
 
   echo ""
   msg_info "A system reboot is required to fully revert changes."
+  read -p "Press Enter to continue..."
 }
-
 
 main_menu() {
   while true; do
