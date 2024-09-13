@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V13
+    After Install Script for Proxmox -V14
             by Daniel Brunod
          
 
@@ -437,15 +437,24 @@ revert_pci_passthrough() {
 }
 
 remove_proxmox_popup() {
-  msg_info "Removing Proxmox subscription pop-up (if present)"
+  local js_file="/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js"
   
-  # Execute the sed command to remove the subscription pop-up
-  sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-  
-  # Restart pveproxy service to apply changes
-  systemctl restart pveproxy.service
+  msg_info "Checking if the subscription pop-up is still present..."
 
-  msg_ok "Subscription pop-up removal command executed, and pveproxy service restarted."
+  # Check if the pop-up still exists in the file
+  if grep -q "Ext.Msg.show({\s\+title: gettext('No valid sub" $js_file; then
+    msg_info "Subscription pop-up found, applying removal..."
+
+    # Apply the sed command to remove the subscription pop-up
+    sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" $js_file
+    msg_ok "Subscription pop-up removed"
+
+    # Restart pveproxy service to apply changes
+    systemctl restart pveproxy.service
+    msg_ok "pveproxy service restarted"
+  else
+    msg_ok "Subscription pop-up not found, no action required."
+  fi
 
   echo ""
   read -p "Press Enter to continue..."
