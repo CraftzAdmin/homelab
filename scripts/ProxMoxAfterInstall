@@ -327,9 +327,9 @@ modify_repos() {
 # Main menu loop
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 60 10 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 70 10 \  # Adjusted height to 20 and width to 70
     "1" "Update and Upgrade Proxmox" \
-    "2"  "Modify DNS"\
+    "2" "Modify DNS" \
     "3" "Display Active Repositories" \
     "4" "Modify Repositories" \
     "5" "Exit" 3>&2 2>&1 1>&3)
@@ -357,7 +357,6 @@ main_menu() {
     esac
   done
 }
-
 
 # Start the script
 header_info
