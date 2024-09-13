@@ -108,26 +108,65 @@ modify_dns() {
       # Comment out all existing nameserver entries
       sed -i 's/^nameserver/#&/' $resolv_file
 
-      # Set new nameservers based on user choice, descomentando se existirem ou adicionando se não
+      # Set new nameservers based on user choice, only adding if they don't exist, or uncommenting if found commented
       case $NEW_DNS in
         1)
-          grep -q '^nameserver 1.1.1.1' $resolv_file || echo "nameserver 1.1.1.1" >> $resolv_file
-          grep -q '^nameserver 1.0.0.1' $resolv_file || echo "nameserver 1.0.0.1" >> $resolv_file
+          if grep -q '^#nameserver 1.1.1.1' $resolv_file; then
+            sed -i 's|^#nameserver 1.1.1.1|nameserver 1.1.1.1|' $resolv_file
+          elif ! grep -q '^nameserver 1.1.1.1' $resolv_file; then
+            echo "nameserver 1.1.1.1" >> $resolv_file
+          fi
+          
+          if grep -q '^#nameserver 1.0.0.1' $resolv_file; then
+            sed -i 's|^#nameserver 1.0.0.1|nameserver 1.0.0.1|' $resolv_file
+          elif ! grep -q '^nameserver 1.0.0.1' $resolv_file; then
+            echo "nameserver 1.0.0.1" >> $resolv_file
+          fi
           msg_ok "Cloudflare DNS configured"
           ;;
+          
         2)
-          grep -q '^nameserver 1.1.1.2' $resolv_file || echo "nameserver 1.1.1.2" >> $resolv_file
-          grep -q '^nameserver 1.0.0.2' $resolv_file || echo "nameserver 1.0.0.2" >> $resolv_file
+          if grep -q '^#nameserver 1.1.1.2' $resolv_file; then
+            sed -i 's|^#nameserver 1.1.1.2|nameserver 1.1.1.2|' $resolv_file
+          elif ! grep -q '^nameserver 1.1.1.2' $resolv_file; then
+            echo "nameserver 1.1.1.2" >> $resolv_file
+          fi
+          
+          if grep -q '^#nameserver 1.0.0.2' $resolv_file; then
+            sed -i 's|^#nameserver 1.0.0.2|nameserver 1.0.0.2|' $resolv_file
+          elif ! grep -q '^nameserver 1.0.0.2' $resolv_file; then
+            echo "nameserver 1.0.0.2" >> $resolv_file
+          fi
           msg_ok "Cloudflare DNS with Malware Protection configured"
           ;;
+          
         3)
-          grep -q '^nameserver 1.1.1.3' $resolv_file || echo "nameserver 1.1.1.3" >> $resolv_file
-          grep -q '^nameserver 1.0.0.3' $resolv_file || echo "nameserver 1.0.0.3" >> $resolv_file
+          if grep -q '^#nameserver 1.1.1.3' $resolv_file; then
+            sed -i 's|^#nameserver 1.1.1.3|nameserver 1.1.1.3|' $resolv_file
+          elif ! grep -q '^nameserver 1.1.1.3' $resolv_file; then
+            echo "nameserver 1.1.1.3" >> $resolv_file
+          fi
+          
+          if grep -q '^#nameserver 1.0.0.3' $resolv_file; then
+            sed -i 's|^#nameserver 1.0.0.3|nameserver 1.0.0.3|' $resolv_file
+          elif ! grep -q '^nameserver 1.0.0.3' $resolv_file; then
+            echo "nameserver 1.0.0.3" >> $resolv_file
+          fi
           msg_ok "Cloudflare DNS with Malware & Adult Content Protection configured"
           ;;
+          
         4)
-          grep -q '^nameserver 8.8.8.8' $resolv_file || echo "nameserver 8.8.8.8" >> $resolv_file
-          grep -q '^nameserver 8.8.4.4' $resolv_file || echo "nameserver 8.8.4.4" >> $resolv_file
+          if grep -q '^#nameserver 8.8.8.8' $resolv_file; then
+            sed -i 's|^#nameserver 8.8.8.8|nameserver 8.8.8.8|' $resolv_file
+          elif ! grep -q '^nameserver 8.8.8.8' $resolv_file; then
+            echo "nameserver 8.8.8.8" >> $resolv_file
+          fi
+          
+          if grep -q '^#nameserver 8.8.4.4' $resolv_file; then
+            sed -i 's|^#nameserver 8.8.4.4|nameserver 8.8.4.4|' $resolv_file
+          elif ! grep -q '^nameserver 8.8.4.4' $resolv_file; then
+            echo "nameserver 8.8.4.4" >> $resolv_file
+          fi
           msg_ok "Google DNS configured"
           ;;
       esac
@@ -147,6 +186,7 @@ modify_dns() {
       ;;
   esac
 }
+
 
 # Function to modify repositories (non-production and enterprise)
 modify_repos() {
