@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V10
+    After Install Script for Proxmox -V11
             by Daniel Brunod
          
 
@@ -385,7 +385,7 @@ configure_intel_pci_passthrough() {
   fi
 
   echo ""
-  msg_info "A system reboot is required for changes to take effect."
+  msg_ok "A system reboot is required for changes to take effect."
   read -p "Press Enter to continue..."
 }
 
@@ -422,7 +422,7 @@ configure_amd_pci_passthrough() {
   fi
 
   echo ""
-  msg_info "A system reboot is required for changes to take effect."
+  msg_ok "A system reboot is required for changes to take effect."
   read -p "Press Enter to continue..."
 }
 
@@ -456,7 +456,7 @@ revert_pci_passthrough() {
   msg_ok "VFIO modules removed from /etc/modules"
 
   echo ""
-  msg_info "A system reboot is required to fully revert changes."
+  msg_ok "A system reboot is required to fully revert changes."
   read -p "Press Enter to continue..."
 }
 
