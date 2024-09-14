@@ -4,6 +4,9 @@
 # Author: Daniel Brunod
 # License: MIT
 # This script is used for setting up a Proxmox server from scratch
+# Microcodes and HA based on Author: tteck (tteckster) https://github.com/tteck/Proxmox/
+# Please refer to https://helper-scripts.com/ for official sources.
+# This script was created for my specific use with Proxmox and "Chinese" Xeon Processors.
 
 header_info() {
   clear
@@ -618,7 +621,7 @@ high_availability() {
   # Check if high availability service is NOT active
   if ! systemctl is-active --quiet pve-ha-lrm; then
     # Ask the user if they want to enable high availability
-    CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "HIGH AVAILABILITY" \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "High Availability Setup" \
       --menu "High Availability (HA) services are currently disabled.\nWould you like to enable High Availability?" 12 58 3 \
       "1" "Enable High Availability services" \
       "2" "Keep High Availability services disabled" \
@@ -647,7 +650,7 @@ high_availability() {
   # Check if high availability service IS active
   if systemctl is-active --quiet pve-ha-lrm; then
     # Ask the user if they want to disable high availability
-    CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "HIGH AVAILABILITY" \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "High Availability Setup" \
       --menu "High Availability (HA) services are currently enabled.\nIf you're using a single node, you can disable HA to save resources.\n\nDo you want to disable High Availability?" 18 58 3 \
       "1" "Disable High Availability services" \
       "2" "Keep High Availability services enabled" \
@@ -686,7 +689,7 @@ microcodes_intel_and_amd() {
   fi
 
   # Solicita confirmação para continuar
-  whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Processor Microcode" \
+  whiptail --backtitle "Proxmox Server Setup" --title "Processor Microcodes" \
     --yesno "This will check for CPU microcode packages with the option to install. Proceed?" 10 58 || exit
 
   msg_info "Checking CPU Vendor"
@@ -715,10 +718,10 @@ microcodes_intel_and_amd() {
       MICROCODE_MENU+=("$TAG" "$ITEM " "OFF")
     done < <(echo "$intel_microcode")
 
-    microcode=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Current Microcode revision: ${current_microcode}" \
+    microcode=$(whiptail --backtitle "Proxmox Server Setup" --title "Current Microcode revision: ${current_microcode}" \
       --radiolist "\nSelect a microcode package to install:\n" 16 $((MSG_MAX_LENGTH + 58)) 6 "${MICROCODE_MENU[@]}" 3>&1 1>&2 2>&3 | tr -d '"') || exit
 
-    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
+    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox Server Setup" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
 
     msg_info "Downloading Intel Processor Microcode Package $microcode"
     wget -q http://ftp.debian.org/debian/pool/non-free-firmware/i/intel-microcode/$microcode
@@ -749,10 +752,10 @@ microcodes_intel_and_amd() {
       MICROCODE_MENU+=("$TAG" "$ITEM " "OFF")
     done < <(echo "$amd_microcode")
 
-    microcode=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Current Microcode revision: ${current_microcode}" \
+    microcode=$(whiptail --backtitle "Proxmox Server Setup" --title "Current Microcode revision: ${current_microcode}" \
       --radiolist "\nSelect a microcode package to install:\n" 16 $((MSG_MAX_LENGTH + 58)) 6 "${MICROCODE_MENU[@]}" 3>&1 1>&2 2>&3 | tr -d '"') || exit
 
-    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
+    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox Server Setup" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
 
     msg_info "Downloading AMD Processor Microcode Package $microcode"
     wget -q https://ftp.debian.org/debian/pool/non-free-firmware/a/amd64-microcode/$microcode
