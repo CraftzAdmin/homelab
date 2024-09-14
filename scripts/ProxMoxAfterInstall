@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V17
+    After Install Script for Proxmox -V18
             by Daniel Brunod
          
 
@@ -470,7 +470,7 @@ disable_spectre_meltdown_mitigations() {
 
 # Display an explanation in a message box
   whiptail --backtitle "Proxmox Server Setup" --title "Disable Spectre Meltdown Mitigations" \
-  --msgbox "Disabling Spectre and Meltdown mitigations can improve performance \nbut may expose your system to vulnerabilities.\n Proceed with caution.\n\This patch is for ZFS Filesystem Only." 10 60
+  --msgbox "Disabling Spectre and Meltdown mitigations can improve performance but may expose your system to vulnerabilities.\nProceed with caution.\n\This patch is for ZFS Filesystem Only." 20 60
 
   CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Disable Spectre Meltdown Mitigations" --menu "Choose an option:" 15 60 2 \
   "1" "Disable Spectre/Meltdown Mitigations" \
