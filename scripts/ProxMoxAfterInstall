@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V18
+    After Install Script for Proxmox -V19
             by Daniel Brunod
          
 
@@ -90,7 +90,7 @@ modify_dns() {
     2)
       msg_info "Setting new DNS servers"
       # Present DNS options to the user
-      NEW_DNS=$(whiptail --backtitle "Proxmox Server Setup" --title "Choose DNS Servers" --menu "Select a DNS option:" 15 60 4 \
+      NEW_DNS=$(whiptail --backtitle "Proxmox Server Setup" --title "Choose DNS Servers" --menu "Select a DNS option:" 15 70 4 \
       "1" "Cloudflare (1.1.1.1, 1.0.0.1)" \
       "2" "Cloudflare Malware Protection (1.1.1.2, 1.0.0.2)" \
       "3" "Cloudflare Malware & Adult Content Filter (1.1.1.3, 1.0.0.3)" \
@@ -326,10 +326,8 @@ modify_repos() {
 
 # Function to enable PCI Passthrough
 enable_pci_passthrough() {
-  msg_info "PCI Passthrough allows a physical PCI device, like a GPU or network card, to be passed directly to a virtual machine (VM). This allows the VM to use the device at near-native speeds, bypassing the host OS. This feature is commonly used in high-performance environments where direct hardware access is crucial."
-  
-  echo ""
-  read -p "Press Enter to continue..."
+
+--msgbox "PCI Passthrough allows a physical PCI device, like a GPU or network card, to be passed directly to a virtual machine (VM).\nThis allows the VM to use the device at near-native speeds, bypassing the host OS.\nThis feature is commonly used in high-performance environments where direct hardware access is crucial." 12 60
   
   CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "PCI Passthrough Configuration" --menu "Select the chipset type:" 15 60 3 \
   "1" "Intel Chips" \
@@ -622,7 +620,7 @@ reboot_now() {
 
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 15 80 8 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 80 8 \
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
