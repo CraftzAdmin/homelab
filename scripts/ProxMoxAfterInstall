@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V15
+    After Install Script for Proxmox -V17
             by Daniel Brunod
          
 
@@ -468,6 +468,10 @@ disable_spectre_meltdown_mitigations() {
 
   msg_info "Disable Spectre Meltdown Mitigations Menu"
 
+# Display an explanation in a message box
+  whiptail --backtitle "Proxmox Server Setup" --title "Disable Spectre Meltdown Mitigations" \
+  --msgbox "Disabling Spectre and Meltdown mitigations can improve performance \nbut may expose your system to vulnerabilities.\n Proceed with caution.\n\This patch is for ZFS Filesystem Only." 10 60
+
   CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Disable Spectre Meltdown Mitigations" --menu "Choose an option:" 15 60 2 \
   "1" "Disable Spectre/Meltdown Mitigations" \
   "2" "Revert to Backup" 3>&2 2>&1 1>&3)
@@ -507,11 +511,17 @@ apply_disable_mitigations() {
     msg_info "Backup of GRUB already exists at $grub_backup_file"
   fi
 
-  # Display current cmdline options
+ # Display current cmdline options
   msg_info "Current /etc/kernel/cmdline:"
   cat $cmdline_file
   echo ""
-  read -p "Press Enter to continue or return to the menu..."
+
+  # Prompt the user to continue or return to the menu
+  read -p "Do you want to continue applying mitigations=off? (y/n): " confirm
+  if [[ $confirm != [yY] ]]; then
+    msg_info "Operation canceled. Returning to menu."
+    return  # Return to the menu if the user selects 'n'
+  fi
 
   # Check if the cmdline contains mitigations=off
   if grep -q "mitigations=off" $cmdline_file; then
