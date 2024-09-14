@@ -16,7 +16,7 @@ header_info() {
 ╚██████╗██║  ██║██║  ██║██║        ██║   ███████╗
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝   ╚══════╝                                              
           
-    After Install Script for Proxmox -V20
+    After Install Script for Proxmox -V1
             by Daniel Brunod
          
 
@@ -614,11 +614,180 @@ reboot_now() {
   fi
 }
 
+high_availability() {
+  # Check if high availability service is NOT active
+  if ! systemctl is-active --quiet pve-ha-lrm; then
+    # Ask the user if they want to enable high availability
+    CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "HIGH AVAILABILITY" \
+      --menu "High Availability (HA) services are currently disabled.\nWould you like to enable High Availability?" 12 58 3 \
+      "1" "Enable High Availability services" \
+      "2" "Keep High Availability services disabled" \
+      "3" "Return to Main Menu" 3>&2 2>&1 1>&3)
+    
+    case $CHOICE in
+      1)
+        msg_info "Enabling High Availability services..."
+        systemctl enable -q --now pve-ha-lrm
+        systemctl enable -q --now pve-ha-crm
+        systemctl enable -q --now corosync
+        msg_ok "High Availability services have been enabled successfully."
+        ;;
+      2)
+        msg_error "You chose to keep High Availability services disabled."
+        ;;
+      3)
+        return  # Return to the main menu without making any changes
+        ;;
+      *)
+        msg_error "Invalid option selected."
+        ;;
+    esac
+  fi
+
+  # Check if high availability service IS active
+  if systemctl is-active --quiet pve-ha-lrm; then
+    # Ask the user if they want to disable high availability
+    CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "HIGH AVAILABILITY" \
+      --menu "High Availability (HA) services are currently enabled.\nIf you're using a single node, you can disable HA to save resources.\n\nDo you want to disable High Availability?" 18 58 3 \
+      "1" "Disable High Availability services" \
+      "2" "Keep High Availability services enabled" \
+      "3" "Return to Main Menu" 3>&2 2>&1 1>&3)
+
+    case $CHOICE in
+      1)
+        msg_info "Disabling High Availability services..."
+        systemctl disable -q --now pve-ha-lrm
+        systemctl disable -q --now pve-ha-crm
+        systemctl disable -q --now corosync
+        msg_ok "High Availability services have been disabled successfully."
+        ;;
+      2)
+        msg_error "You chose to keep High Availability services enabled."
+        ;;
+      3)
+        return  # Return to the main menu without making any changes
+        ;;
+      *)
+        msg_error "Invalid option selected."
+        ;;
+    esac
+  fi
+}
+
+microcodes_intel_and_amd() {
+  # Verifica a revisão atual do microcódigo
+  current_microcode=$(journalctl -k | grep -i 'microcode: Current revision:' | grep -oP 'Current revision: \K0x[0-9a-f]+')
+  [ -z "$current_microcode" ] && current_microcode="Not found."
+
+  # Verifica a presença do Proxmox VE
+  if ! command -v pveversion >/dev/null 2>&1; then
+    msg_error "No Proxmox VE Detected! Exiting..."
+    exit
+  fi
+
+  # Solicita confirmação para continuar
+  whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE Processor Microcode" \
+    --yesno "This will check for CPU microcode packages with the option to install. Proceed?" 10 58 || exit
+
+  msg_info "Checking CPU Vendor"
+  cpu=$(lscpu | grep -oP 'Vendor ID:\s*\K\S+' | head -n 1)
+
+  # Função interna para microcódigo Intel
+  intel_microcode_install() {
+    if ! dpkg -s iucode-tool >/dev/null 2>&1; then
+      msg_info "Installing Intel microcode tool (iucode-tool)..."
+      apt-get install -y iucode-tool &>/dev/null
+      msg_ok "Intel microcode tool installed."
+    else
+      msg_ok "Intel microcode tool is already installed."
+      sleep 1
+    fi
+
+    intel_microcode=$(curl -fsSL "https://ftp.debian.org/debian/pool/non-free-firmware/i/intel-microcode/" | grep -o 'href="[^"]*amd64.deb"' | sed 's/href="//;s/"//')
+    [ -z "$intel_microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Found" --msgbox "No Intel microcode packages found. Try again later." 10 68; msg_error "Exiting"; exit; }
+
+    MICROCODE_MENU=()
+    MSG_MAX_LENGTH=0
+
+    while read -r TAG ITEM; do
+      OFFSET=2
+      (( ${#ITEM} + OFFSET > MSG_MAX_LENGTH )) && MSG_MAX_LENGTH=${#ITEM}+OFFSET
+      MICROCODE_MENU+=("$TAG" "$ITEM " "OFF")
+    done < <(echo "$intel_microcode")
+
+    microcode=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Current Microcode revision: ${current_microcode}" \
+      --radiolist "\nSelect a microcode package to install:\n" 16 $((MSG_MAX_LENGTH + 58)) 6 "${MICROCODE_MENU[@]}" 3>&1 1>&2 2>&3 | tr -d '"') || exit
+
+    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
+
+    msg_info "Downloading Intel Processor Microcode Package $microcode"
+    wget -q http://ftp.debian.org/debian/pool/non-free-firmware/i/intel-microcode/$microcode
+    msg_ok "Downloaded Intel Processor Microcode Package $microcode"
+
+    msg_info "Installing $microcode (Patience)"
+    dpkg -i $microcode &>/dev/null
+    msg_ok "Installed $microcode"
+
+    msg_info "Cleaning up"
+    rm $microcode
+    msg_ok "Cleaned up"
+    echo -e "\nA system reboot is required to apply the changes.\n"
+  }
+
+  # Função interna para microcódigo AMD
+  amd_microcode_install() {
+    amd_microcode=$(curl -fsSL "https://ftp.debian.org/debian/pool/non-free-firmware/a/amd64-microcode/" | grep -o 'href="[^"]*amd64.deb"' | sed 's/href="//;s/"//')
+
+    [ -z "$amd_microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Found" --msgbox "No AMD microcode packages found. Try again later." 10 68; msg_error "Exiting"; exit; }
+
+    MICROCODE_MENU=()
+    MSG_MAX_LENGTH=0
+
+    while read -r TAG ITEM; do
+      OFFSET=2
+      (( ${#ITEM} + OFFSET > MSG_MAX_LENGTH )) && MSG_MAX_LENGTH=${#ITEM}+OFFSET
+      MICROCODE_MENU+=("$TAG" "$ITEM " "OFF")
+    done < <(echo "$amd_microcode")
+
+    microcode=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Current Microcode revision: ${current_microcode}" \
+      --radiolist "\nSelect a microcode package to install:\n" 16 $((MSG_MAX_LENGTH + 58)) 6 "${MICROCODE_MENU[@]}" 3>&1 1>&2 2>&3 | tr -d '"') || exit
+
+    [ -z "$microcode" ] && { whiptail --backtitle "Proxmox VE Helper Scripts" --title "No Microcode Selected" --msgbox "No microcode packages selected." 10 68; msg_error "Exiting"; exit; }
+
+    msg_info "Downloading AMD Processor Microcode Package $microcode"
+    wget -q https://ftp.debian.org/debian/pool/non-free-firmware/a/amd64-microcode/$microcode
+    msg_ok "Downloaded AMD Processor Microcode Package $microcode"
+
+    msg_info "Installing $microcode (Patience)"
+    dpkg -i $microcode &>/dev/null
+    msg_ok "Installed $microcode"
+
+    msg_info "Cleaning up"
+    rm $microcode
+    msg_ok "Cleaned up"
+    echo -e "\nA system reboot is required to apply the changes.\n"
+  }
+
+  # Lógica de verificação e execução
+  if [ "$cpu" == "GenuineIntel" ]; then
+    msg_ok "Intel CPU detected."
+    sleep 1
+    intel_microcode_install
+  elif [ "$cpu" == "AuthenticAMD" ]; then
+    msg_ok "AMD CPU detected."
+    sleep 1
+    amd_microcode_install
+  else
+    msg_error "Unsupported CPU vendor: ${cpu}. Exiting..."
+    exit
+  fi
+}
+
 
 
 main_menu() {
   while true; do
-    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 80 8 \
+    CHOICE=$(whiptail --backtitle "Proxmox Server Setup" --title "Main Menu" --menu "Choose an option:" 20 80 11 \
     "1" "Update and Upgrade Proxmox" \
     "2" "Modify DNS" \
     "3" "Display Active Repositories" \
@@ -626,8 +795,10 @@ main_menu() {
     "5" "Enable PCI Passthrough" \
     "6" "Remove Proxmox Subscription Pop-up" \
     "7" "Disable Spectre/Meltdown Mitigations" \
-    "8" "Reboot Now" \
-    "9" "Exit" 3>&2 2>&1 1>&3)
+    "8" "High Availability (HA)" \
+    "9" "Microcodes Intel and AMD" \
+    "10" "Reboot Now" \
+    "11" "Exit" 3>&2 2>&1 1>&3)
 
     case $CHOICE in
       1)
@@ -652,9 +823,15 @@ main_menu() {
         disable_spectre_meltdown_mitigations
         ;;
       8)
-        reboot_now  
+        high_availability  # Chamada da função de High Availability (HA)
         ;;
       9)
+        microcodes_intel_and_amd  # Chamada da função Microcodes Intel and AMD
+        ;;
+      10)
+        reboot_now  # Chamada da função para reiniciar o sistema
+        ;;
+      11)
         clear
         exit 0
         ;;
@@ -664,8 +841,6 @@ main_menu() {
     esac
   done
 }
-
-
 
 
 # Start the script
