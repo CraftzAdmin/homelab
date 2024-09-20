@@ -258,6 +258,8 @@ Na prática, mais de **90% das memórias comercializadas** como 3200MHz funciona
 
 Por isso, prefiro optar pelas **memórias 2666MHz**, que trabalham de forma **nativa** nessa velocidade, garantindo **estabilidade** e **compatibilidade** com o sistema, sem a necessidade de overclock ou ajustes. Dessa forma, o desempenho esperado é sempre o que você obtém, sem surpresas ou instabilidades devido a configurações incorretas.
 
+[A - UTILIZANDO SCRIPT DE PÓS INSTALAÇÃO]((tutorial/README.md)
+
 [1.Atualizar e Fazer Upgrade](tutorial/1updates.md)
 
 [2.Modificar a Configuração do DNS](tutorial/2dns.md)
