@@ -1,5 +1,4 @@
-# Montando seu Homelab - PROXMOX
-##com MACHINIST MR9A e KIT XEON
+# Homelab - PROXMOX e MR9A e KIT XEON
 
 ### **O que é o Proxmox Virtual Environment?**
 
