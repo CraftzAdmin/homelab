@@ -5,6 +5,8 @@ No Proxmox, a configuração de DNS é essencial para garantir que o sistema pos
 
 Normalmente, durante a **configuração inicial do Proxmox**, um DNS padrão é obtido automaticamente do **gateway da rede**. No entanto, em muitos casos, você pode querer alterar o DNS para um mais rápido ou confiável, como o **Cloudflare**, **Google DNS** ou **OpenDNS**, que podem melhorar o desempenho de rede e a segurança.
 
+---
+
 No meu script, foram listadas várias opções de servidores DNS:
 
 1.  **Cloudflare (1.1.1.1, 1.0.0.1)**:
@@ -28,12 +30,10 @@ No meu script, foram listadas várias opções de servidores DNS:
 
     1.  **Verificar a configuração de DNS atual**:
 
-        -   Antes de modificar, você pode verificar qual DNS o Proxmox está usando atualmente com o seguinte comando:
+        -   Antes de modificar, você pode verificar qual DNS o Proxmox está usando atualmente com o seguinte comando:<p></p>
 
-     ```
-
+     ```console
      cat /etc/resolv.conf
-
       ```
 
     2.  **Acesse o terminal do Proxmox**:
@@ -43,64 +43,52 @@ No meu script, foram listadas várias opções de servidores DNS:
 
         -   No Proxmox, **o DNS é configurado no arquivo** `/etc/resolv.conf`. O `nano` é um editor de texto que você pode usar para modificar arquivos de configuração diretamente no terminal.
 
-        Para editar o arquivo e modificar os servidores DNS, use o seguinte comando:
+        Para editar o arquivo e modificar os servidores DNS, use o seguinte comando:<p></p>
 
-    ```
-
+    ```console
     nano /etc/resolv.conf
-
     ```
 
     1.  **Modifique ou adicione os servidores DNS**:
-    -   No arquivo `/etc/resolv.conf`, você verá linhas que indicam os servidores DNS atuais:
+    -   No arquivo `/etc/resolv.conf`, você verá linhas que indicam os servidores DNS atuais:<p></p>
 
-     ```
-
+     ```console
      nameserver 192.168.1.1
-
      ```
 
     Isso mostra que o DNS está apontando para o gateway (192.168.1.1). Esse DNS pode ser o obtido via DHCP, o que não necessariamente é o mais rápido ou confiável.
 
     -   Substitua ou adicione servidores DNS de sua escolha. Aqui estão algumas opções recomendadas:
 
-    **Para usar o DNS da Cloudflare (1.1.1.1 e 1.0.0.1)**:
+    **Para usar o DNS da Cloudflare (1.1.1.1 e 1.0.0.1)**:<p></p>
 
 
-    ```
-
+    ```console
     nameserver 1.1.1.1
     nameserver 1.0.0.1
-
     ```
 
-    **Para usar o Cloudflare com proteção contra malware (1.1.1.2 e 1.0.0.2)**:
+    **Para usar o Cloudflare com proteção contra malware (1.1.1.2 e 1.0.0.2)**:<p></p>
 
 
-    ```
-
+    ```console
     nameserver 1.1.1.2
     nameserver 1.0.0.2
-
     ```
 
-    **Para usar o Google DNS (8.8.8.8 e 8.8.4.4)**:
+    **Para usar o Google DNS (8.8.8.8 e 8.8.4.4)**:<p></p>
 
 
-    ```
-    
+    ```console
     nameserver 8.8.8.8
     nameserver 8.8.4.4
-
     ```
 
-    **Para usar o OpenDNS (208.67.222.222 e 208.67.220.220)**:
+    **Para usar o OpenDNS (208.67.222.222 e 208.67.220.220)**:<p></p>
 
-    ```
-    
+    ```console
     nameserver 208.67.222.222
     nameserver 208.67.220.220
-
     ```
 
     -   Cada linha `nameserver` define um servidor DNS que o Proxmox utilizará para resolver nomes de domínio. Substitua ou adicione novos servidores conforme necessário.
@@ -109,13 +97,11 @@ No meu script, foram listadas várias opções de servidores DNS:
     -   Depois de fazer as alterações, pressione `CTRL + O` para salvar o arquivo e `CTRL + X` para sair do editor `nano`. Ou use `CTRL + X` e confirme as alterações .
 6.  **Teste a nova configuração de DNS**:
 
-    -   Para verificar se as mudanças no DNS estão funcionando, use o comando `ping` para testar a resolução de nomes de domínio:
+    -   Para verificar se as mudanças no DNS estão funcionando, use o comando `ping` para testar a resolução de nomes de domínio:<p></p>
 
 
-    ```
-    
+    ```console
     ping google.com
-
     ```
 
     Se a nova configuração estiver funcionando, você verá uma resposta de ping, indicando que o Proxmox consegue resolver o nome de domínio.
@@ -126,27 +112,21 @@ A escolha correta de um servidor DNS pode melhorar o desempenho do Proxmox ao ac
 
 ### Comandos úteis para verificar a configuração de DNS no Proxmox:
 
--   **Verificar DNS atual**:
+-   **Verificar DNS atual**:<p></p>
   
-  ```
-    
+  ```console
     cat /etc/resolv.conf
-
    ```
 
--   **Testar a resolução de nomes de domínio (ex. [google.com](http://google.com))**
+-   **Testar a resolução de nomes de domínio (ex. [google.com](http://google.com))**<p></p>
 
-   ```
-    
+   ```console
     ping google.com
-
    ```
 
--   **Verificar o gateway padrão (DNS obtido automaticamente)**:
+-   **Verificar o gateway padrão (DNS obtido automaticamente)**:<p></p>
 
 
-  ```
-
+  ```console
    ip route | grep default
-
    ```
