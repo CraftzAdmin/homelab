@@ -11,9 +11,9 @@ Aqui está um passo a passo detalhado sobre como ativar ou desativar o HA usando
 
 Antes de ativar ou desativar o HA, você pode verificar se o serviço já está em execução.
 
-a.  **Verifique o status do serviço HA**:
+a.  **Verifique o status do serviço HA**:<p></p>
 
-  ```
+  ```console
     systemctl is-active --quiet pve-ha-lrm 
    ```
 
@@ -26,11 +26,11 @@ a.  **Verifique o status do serviço HA**:
 
 1.  **Ativar o HA**:
 
-    -   Caso o serviço de HA esteja desativado, ative-o com os seguintes comandos:
+    -   Caso o serviço de HA esteja desativado, ative-o com os seguintes comandos:<p></p>
     
       
 
-    ```
+    ```console
     systemctl enable --now pve-ha-lrm
     systemctl enable --now pve-ha-crm
     systemctl enable --now corosync
@@ -40,9 +40,9 @@ a.  **Verifique o status do serviço HA**:
     
 2.  **Verificar se os serviços estão ativos**:
 
-    -   Após ativar, você pode verificar se os serviços foram iniciados corretamente:
+    -   Após ativar, você pode verificar se os serviços foram iniciados corretamente:<p></p>
 
-    ```
+    ```console
     systemctl status pve-ha-lrm
     systemctl status pve-ha-crm
     systemctl status corosync
@@ -55,9 +55,9 @@ Se você não precisar mais dos serviços de alta disponibilidade, ou estiver us
 
 1.  **Desativar os serviços de HA**:
 
-    -   Para desativar o HA, execute os seguintes comandos:
+    -   Para desativar o HA, execute os seguintes comandos:<p></p>
 
-    ```
+    ```console
     systemctl disable --now pve-ha-lrm
     systemctl disable --now pve-ha-crm
     systemctl disable --now corosync
@@ -65,9 +65,9 @@ Se você não precisar mais dos serviços de alta disponibilidade, ou estiver us
 
 2.  **Verificar se os serviços foram desativados**:
 
-    -   Use o comando a seguir para verificar se os serviços foram desativados com sucesso:
+    -   Use o comando a seguir para verificar se os serviços foram desativados com sucesso:<p></p>
 
-    ```
+    ```console
     systemctl status pve-ha-lrm
 
     ```
@@ -78,23 +78,23 @@ Se você não precisar mais dos serviços de alta disponibilidade, ou estiver us
 
 ### **4. Comandos Úteis para Gerenciamento de HA**
 
--   **Verificar o status do HA**:
+-   **Verificar o status do HA**:<p></p>
 
-    ```
+    ```console
     systemctl is-active --quiet pve-ha-lrm
     ```
 
--   **Ativar o HA**:
+-   **Ativar o HA**:<p></p>
 
-    ```
+    ```console
     systemctl enable --now pve-ha-lrm
     systemctl enable --now pve-ha-crm
     systemctl enable --now corosync
     ```
 
--   **Desativar o HA**:
+-   **Desativar o HA**:<p></p>
 
-    ```
+    ```console
     systemctl disable --now pve-ha-lrm
     systemctl disable --now pve-ha-crm
     systemctl disable --now corosync
