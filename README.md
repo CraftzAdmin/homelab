@@ -6,14 +6,18 @@ O **Proxmox Virtual Environment (VE)** é uma plataforma de virtualização open
 
 Lançada em versões atualizadas regularmente, a versão **Proxmox VE 8.2.4** traz melhorias de desempenho, segurança e novas funcionalidades, tornando-o ainda mais robusto para diferentes cenários de uso.
 
+1. [Vantagens do Proxmox VE 8.2.4](#vantagens-do-proxmox-ve-824)
+2. [Desvantagens do Proxmox VE 8.2.4](#desvantagens-do-proxmox-ve-824)
+3. [Entendendo os conceitos de KVM e LXC](#entendendo-os-conceitos-de-kvm-e-lxc)
+4. [Hardware do Homelab: Configuração e Descrição](#hardware-do-homelab-configura%C3%A7%C3%A3o-e-descri%C3%A7%C3%A3o)
+5. [Processador Xeon E5-2680V4: Equilíbrio entre Jogos e Produtividade](#processador-xeon-e5-2680v4-equil%C3%ADbrio-entre-jogos-e-produtividade)
+6. [O que é TDP?](#o-que-%C3%A9-tdp)
+7. [Processadores Xeon Reaproveitados: Vantagens e Desvantagens](#processadores-xeon-reaproveitados-vantagens-e-desvantagens)
+8. [Escolhendo a Memória para o Homelab: Desktop vs. ECC](#escolhendo-a-mem%C3%B3ria-para-o-homelab-desktop-vs-ecc)
+9. [Memórias 2666MHz vs. 3200MHz: Qual Escolher?](#mem%C3%B3rias-2666mhz-vs-3200mhz-qual-escolher)
+10. :star:[Tutorial Pos Instalação e Scripts](#tutorial-pos-instala%C3%A7%C3%A3o-e-scripts):star:
+
 ---
-# Conteúdo deste
-1. [Example](#vantagens-do-proxmox-ve-824)
-2. [Example2](#desvantagens-do-proxmox-ve-824)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
-
-
 
 ### **Vantagens do Proxmox VE 8.2.4**
 
