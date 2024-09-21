@@ -273,7 +273,7 @@ Por isso, prefiro optar pelas **memórias 2666MHz**, que trabalham de forma **na
 
 ### :star:Tutorial Pos Instalação e Scripts:star:
 
-:exclamation:[Script de Instalação e Instruções aos Primeiros Passos](tutorial/README.md)
+[Script de Instalação e Instruções aos Primeiros Passos](tutorial/README.md):exclamation:
 
 [1.Atualizar e Fazer Upgrade](tutorial/1updates.md)
 
