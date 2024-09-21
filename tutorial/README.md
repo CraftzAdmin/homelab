@@ -11,4 +11,4 @@ bash -c "$(wget -qLO - <https://raw.githubusercontent.com/CraftzAdmin/homelab/re
 
 ```
 
-**Recomendo a leitura do passo a passo para entender exatamente o que o script faz.**
+:exclamation:**Recomendo a leitura do passo a passo para entender exatamente o que o script faz.**
