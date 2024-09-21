@@ -5,6 +5,8 @@ Esta função é usada para manter o Proxmox atualizado, garantindo que todas as
 
 Atualizar o sistema Proxmox VE regularmente é crucial para garantir que você tenha as correções de segurança mais recentes, as melhorias de desempenho e a estabilidade que novas versões de pacotes podem oferecer. Além disso, atualizações também podem corrigir bugs.
 
+<hr>
+
 ### Passo a passo:
 
 1.  **Abra o terminal do Proxmox**:
@@ -12,11 +14,9 @@ Atualizar o sistema Proxmox VE regularmente é crucial para garantir que você t
     -   Você pode acessar o terminal diretamente no Proxmox VE usando o Console ou através de uma conexão SSH.
 2.  **Atualize a lista de pacotes disponíveis**:
 
-    -   O comando abaixo atualiza a lista de pacotes que estão disponíveis para serem instalados ou atualizados. Isso significa que ele irá consultar os servidores de pacotes para verificar o que há de novo.
+    -   O comando abaixo atualiza a lista de pacotes que estão disponíveis para serem instalados ou atualizados. Isso significa que ele irá consultar os servidores de pacotes para verificar o que há de novo. <p></p>
 
-
-
-    ```
+    ```console
 
      apt update
 
@@ -24,21 +24,19 @@ Atualizar o sistema Proxmox VE regularmente é crucial para garantir que você t
 
 4.  **Atualize os pacotes instalados**:
 
-    -   Após atualizar a lista de pacotes, você pode atualizar os pacotes instalados em seu sistema com o seguinte comando:
+    -   Após atualizar a lista de pacotes, você pode atualizar os pacotes instalados em seu sistema com o seguinte comando:<p></p>
       
 
-    ```
-
+    ```console
      apt upgrade -y
-
     ```
 
     -   O comando `apt upgrade` atualiza todos os pacotes instalados no sistema para suas versões mais recentes. A opção `y` faz com que o sistema responda "sim" automaticamente para todas as perguntas que aparecerem, permitindo que o processo de atualização continue sem interrupções.
 6.  **Reinicie o Proxmox (se necessário)**:
 
-    -   Se, ao final da atualização, o terminal sugerir que o sistema seja reiniciado, você pode usar o comando:
+    -   Se, ao final da atualização, o terminal sugerir que o sistema seja reiniciado, você pode usar o comando:<p></p>
 
-    ```
+    ```console
 
      reboot
 
