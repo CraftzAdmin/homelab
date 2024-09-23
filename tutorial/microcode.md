@@ -217,10 +217,12 @@ dmesg | grep -e micro
 [    7.136128] microcode: Updated early from: 0x0b000038
 ```
 
-![Microcodes](https://github.com/CraftzAdmin/homelab/blob/aa04dd7fb183710b2f68a50ad3d33fbb37c9da35/images/microcodes.png))
+
+### Screenshot
+![Microcodes](https://github.com/CraftzAdmin/homelab/blob/aa04dd7fb183710b2f68a50ad3d33fbb37c9da35/images/microcodes.png)
 
 
-Essas mensagens indicam que a atualização do microcode foi aplicada corretamente.
+## Essas mensagens indicam que a atualização do microcode foi aplicada corretamente.
  
 
 ----------
