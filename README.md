@@ -15,7 +15,8 @@ Lançada em versões atualizadas regularmente, a versão **Proxmox VE 8.2.4** tr
 7. [Processadores Xeon Reaproveitados: Vantagens e Desvantagens](#processadores-xeon-reaproveitados-vantagens-e-desvantagens)
 8. [Escolhendo a Memória para o Homelab: Desktop vs. ECC](#escolhendo-a-mem%C3%B3ria-para-o-homelab-desktop-vs-ecc)
 9. [Memórias 2666MHz vs. 3200MHz: Qual Escolher?](#mem%C3%B3rias-2666mhz-vs-3200mhz-qual-escolher)
-10. :star:[Tutorial Pos Instalação e Scripts](#tutorial-pos-instala%C3%A7%C3%A3o-e-scripts):star:
+    
+10. [Tutorial Pos Instalação e Scripts](#tutorial-pos-instala%C3%A7%C3%A3o-e-scripts)
 
 ---
 
