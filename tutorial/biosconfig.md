@@ -1,4 +1,4 @@
-# BIOS: Configuração de PCI Passthrough na Placa Machinist Mr9A
+# BIOS: Configuração de PCI Passthrough na Placa Machinist MR9A
 
 **Aviso**: **Faça estas configurações por sua conta e risco!** Modificar as configurações de BIOS pode afetar a estabilidade do sistema. Tenha certeza de que compreende cada passo antes de realizar as alterações.
 
