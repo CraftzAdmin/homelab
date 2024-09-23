@@ -5,10 +5,8 @@ Neste momento, vamos focar nas primeiras configurações e passos essenciais par
 
 Desenvolvi um script para facilitar essa configuração, que pode ser executado com o comando abaixo , mas também coloquei o passo a passo manual.
 
-```
-
+```bash
 bash -c "$(wget -qLO - <https://raw.githubusercontent.com/CraftzAdmin/homelab/refs/heads/main/scripts/ProxMoxAfterInstall>)"
-
 ```
 
 :exclamation:**Recomendo a leitura do passo a passo para entender exatamente o que o script faz.**
